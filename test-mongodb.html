@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #444;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        .success {
+            color: #28a745;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .info {
+            color: #17a2b8;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background-color: #0069d9;
+        }
+
+        .test-btn {
+            margin-top: 10px;
+        }
+
+        .collection-test {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>MongoDB Connection Test</h1>
+
+        <div class="card">
+            <h2>MongoDB Configuration</h2>
+            <div id="config-display"></div>
+            <button id="test-connection" class="test-btn">Test Connection</button>
+        </div>
+
+        <div class="card">
+            <h2>Connection Log</h2>
+            <div id="connection-log" class="log"></div>
+        </div>
+
+        <div class="card">
+            <h2>Collection Tests</h2>
+            <div id="collections-container">
+                <!-- Collection tests will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/utils/performance.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api/mongodb.js"></script>
+    <script>
+        // Initialize logger
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('connection-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Display configuration (masked for security)
+        function displayConfig() {
+            const configEl = document.getElementById('config-display');
+            configEl.innerHTML = `
+                <p><strong>API Key:</strong> ${CONFIG.MONGODB_API_KEY.substring(0, 5)}...${CONFIG.MONGODB_API_KEY.slice(-3)}</p>
+                <p><strong>Private Key:</strong> ${CONFIG.MONGODB_PRIVATE_KEY.substring(0, 5)}...${CONFIG.MONGODB_PRIVATE_KEY.slice(-3)}</p>
+                <p><strong>Database:</strong> ${CONFIG.MONGODB_DATABASE}</p>
+                <p><strong>Data Source:</strong> ${CONFIG.MONGODB_DATA_SOURCE}</p>
+            `;
+        }
+
+        // Create collection test UI
+        function createCollectionTests() {
+            const collections = ['Users', 'Files', 'AnalysisResults', 'Documents', 'Environment', 'Items', 'Logs', 'Settings', 'Uploads'];
+            const container = document.getElementById('collections-container');
+
+            collections.forEach(collection => {
+                const div = document.createElement('div');
+                div.className = 'collection-test';
+                div.innerHTML = `
+                    <h3>${collection}</h3>
+                    <button class="test-find" data-collection="${collection}">Find Records</button>
+                    <button class="test-insert" data-collection="${collection}">Insert Test Record</button>
+                    <div class="log" id="${collection}-log" style="height: 100px;"></div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Add event listeners for collection tests
+            document.querySelectorAll('.test-find').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const collection = e.target.dataset.collection;
+                    testFind(collection);
+                });
+            });
+
+            document.querySelectorAll('.test-insert').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const collection = e.target.dataset.collection;
+                    testInsert(collection);
+                });
+            });
+        }
+
+        // Test MongoDB connection
+        async function testConnection() {
+            log('Testing MongoDB connection...', 'info');
+
+            try {
+                const mongoDB = new MongoDB();
+                const connected = await mongoDB.connect();
+
+                if (connected) {
+                    log('MongoDB connection successful!', 'success');
+                } else {
+                    log('MongoDB connection failed', 'error');
+                }
+
+                return connected;
+            } catch (error) {
+                log(`Error connecting to MongoDB: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // Test finding records in a collection
+        async function testFind(collection) {
+            const logEl = document.getElementById(`${collection}-log`);
+
+            function collectionLog(message, type = 'info') {
+                const logEntry = document.createElement('div');
+                logEntry.className = type;
+                logEntry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+                logEl.appendChild(logEntry);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            collectionLog(`Finding records in ${collection}...`, 'info');
+
+            try {
+                const mongoDB = new MongoDB();
+
+                if (!mongoDB.isConnected) {
+                    await mongoDB.connect();
+                }
+
+                const results = await mongoDB.find(collection, {});
+
+                if (results && results.length >= 0) {
+                    collectionLog(`Found ${results.length} records in ${collection}`, 'success');
+                } else {
+                    collectionLog(`No records found in ${collection} or error occurred`, 'info');
+                }
+            } catch (error) {
+                collectionLog(`Error querying ${collection}: ${error.message}`, 'error');
+            }
+        }
+
+        // Test inserting a test record into a collection
+        async function testInsert(collection) {
+            const logEl = document.getElementById(`${collection}-log`);
+
+            function collectionLog(message, type = 'info') {
+                const logEntry = document.createElement('div');
+                logEntry.className = type;
+                logEntry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+                logEl.appendChild(logEntry);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            collectionLog(`Inserting test record into ${collection}...`, 'info');
+
+            try {
+                const mongoDB = new MongoDB();
+
+                if (!mongoDB.isConnected) {
+                    await mongoDB.connect();
+                }
+
+                // Create a test document appropriate for each collection
+                let testDoc = {
+                    testField: 'Test value',
+                    createdAt: new Date().toISOString()
+                };
+
+                if (collection === 'Users') {
+                    testDoc = {
+                        email: `test_${Date.now()}@example.com`,
+                        username: `test_user_${Date.now()}`,
+                        createdAt: new Date().toISOString()
+                    };
+                }
+
+                const result = await mongoDB.save(collection, testDoc);
+
+                if (result && result.insertedId) {
+                    collectionLog(`Successfully inserted document with ID: ${result.insertedId}`, 'success');
+
+                    // Try to delete the test document to clean up
+                    try {
+                        await mongoDB.delete(collection, { _id: result.insertedId });
+                        collectionLog(`Cleaned up test document`, 'info');
+                    } catch (deleteErr) {
+                        collectionLog(`Note: Could not clean up test document: ${deleteErr.message}`, 'info');
+                    }
+                } else {
+                    collectionLog(`Failed to insert document or no ID returned`, 'error');
+                }
+            } catch (error) {
+                collectionLog(`Error inserting into ${collection}: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize tests when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            displayConfig();
+            createCollectionTests();
+
+            document.getElementById('test-connection').addEventListener('click', testConnection);
+
+            log('MongoDB test page loaded. Click "Test Connection" to begin.', 'info');
+        });
+    </script>
+</body>
+
+</html>

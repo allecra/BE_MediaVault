@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaVault - Kiểm tra trùng lặp</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/img/logo.webp" alt="MediaVault Logo">
+                    <span>MediaVault</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
+                        <li><a href="check.html" class="active"><i class="fas fa-search"></i> Kiểm tra</a></li>
+                        <li><a href="history.html"><i class="fas fa-history"></i> Lịch sử</a></li>
+                        <li><a href="subscription.html"><i class="fas fa-crown"></i> Gói dịch vụ</a></li>
+                        <li class="guest-only"><a href="#" id="login-link" class="btn btn-outline"><i
+                                    class="fas fa-sign-in-alt"></i> Đăng nhập</a></li>
+                        <li class="guest-only"><a href="#" id="register-link" class="btn btn-primary"><i
+                                    class="fas fa-user-plus"></i> Đăng ký</a></li>
+                        <li class="user-only" style="display: none;">
+                            <div class="user-dropdown">
+                                <div class="user-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span id="username-display"></span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-content">
+                                    <a href="#" id="profile-link"><i class="fas fa-user"></i> Hồ sơ</a>
+                                    <a href="#" id="settings-link"><i class="fas fa-cog"></i> Cài đặt</a>
+                                    <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="section check-section">
+        <div class="container">
+            <h2 class="section-title">Kiểm tra trùng lặp</h2>
+            <div class="check-container">
+                <div class="check-types">
+                    <button class="check-type active" data-type="text"><i class="fas fa-font"></i> Văn bản</button>
+                    <button class="check-type" data-type="file"><i class="fas fa-file"></i> Tệp</button>
+                    <button class="check-type" data-type="image"><i class="fas fa-image"></i> Hình ảnh</button>
+                    <button class="check-type" data-type="video"><i class="fas fa-video"></i> Video</button>
+                </div>
+                <div class="text-input-area">
+                    <textarea id="text-input" placeholder="Nhập văn bản để kiểm tra trùng lặp..."></textarea>
+                </div>
+                <div class="file-upload-area" style="display: none;">
+                    <label for="file-input" class="file-upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Kéo thả tệp vào đây hoặc nhấp để tải lên</span>
+                        <small>Hỗ trợ định dạng PDF, DOC, DOCX, TXT (tối đa 10MB)</small>
+                    </label>
+                    <input type="file" id="file-input" style="display: none;" accept=".pdf,.doc,.docx,.txt">
+                </div>
+                <div class="file-upload-area" id="image-upload-area" style="display: none;">
+                    <label for="image-input" class="file-upload-icon">
+                        <i class="fas fa-images"></i>
+                        <span>Kéo thả hình ảnh vào đây hoặc nhấp để tải lên</span>
+                        <small>Hỗ trợ định dạng JPG, PNG, GIF, WEBP (tối đa 5MB)</small>
+                    </label>
+                    <input type="file" id="image-input" style="display: none;" accept="image/*">
+                </div>
+                <div class="file-upload-area" id="video-upload-area" style="display: none;">
+                    <label for="video-input" class="file-upload-icon">
+                        <i class="fas fa-film"></i>
+                        <span>Kéo thả video vào đây hoặc nhấp để tải lên</span>
+                        <small>Hỗ trợ định dạng MP4, AVI, MOV, WEBM (tối đa 100MB)</small>
+                    </label>
+                    <input type="file" id="video-input" style="display: none;" accept="video/*">
+                </div>
+                <button id="check-btn" class="btn btn-primary"><i class="fas fa-search"></i> Kiểm tra ngay</button>
+                <p class="advanced-options-toggle"><a href="#" id="show-advanced"><i class="fas fa-cog"></i> Tùy chọn
+                        nâng cao</a></p>
+                <div class="advanced-options" style="display: none;">
+                    <div class="form-group">
+                        <label>Độ chính xác:</label>
+                        <div class="range-slider">
+                            <input type="range" min="1" max="10" value="7" id="accuracy-slider">
+                            <div class="range-value" id="accuracy-value">7</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ngôn ngữ:</label>
+                        <select id="language-select" class="form-control">
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="en">Tiếng Anh</option>
+                            <option value="fr">Tiếng Pháp</option>
+                            <option value="de">Tiếng Đức</option>
+                            <option value="es">Tiếng Tây Ban Nha</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <input type="checkbox" id="save-history">
+                            <label for="save-history">Lưu vào lịch sử kiểm tra</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Hướng dẫn sử dụng</h2>
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Chọn loại nội dung</h3>
+                        <p>Lựa chọn loại nội dung bạn muốn kiểm tra: văn bản, tệp, hình ảnh hoặc video.</p>
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Tải nội dung lên</h3>
+                        <p>Nhập văn bản hoặc tải tệp lên hệ thống bằng cách kéo thả hoặc chọn tệp từ thiết bị của bạn.
+                        </p>
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Kiểm tra trùng lặp</h3>
+                        <p>Nhấn nút "Kiểm tra ngay" và đợi hệ thống xử lý. Kết quả sẽ được hiển thị sau vài giây.</p>
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Xem kết quả</h3>
+                        <p>Xem tỷ lệ trùng lặp và các nguồn trùng lặp được tìm thấy. Kết quả sẽ được lưu trong lịch sử
+                            kiểm tra.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('login-modal')"><i class="fas fa-times"></i></span>
+            <h3>Đăng nhập</h3>
+            <div class="auth-notification" id="login-notification" style="display: none;"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="Nhập email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Mật khẩu</label>
+                    <input type="password" id="login-password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div class="form-actions-row">
+                    <div class="checkbox">
+                        <input type="checkbox" id="remember-me">
+                        <label for="remember-me">Ghi nhớ đăng nhập</label>
+                    </div>
+                    <a href="#" id="forgot-password" class="forgot-password-link">Quên mật khẩu?</a>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng nhập</button>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <button type="button" id="reset-password-btn" class="btn btn-outline">Đặt lại mật khẩu</button>
+                </div>
+                <p style="text-align: center; margin-top: 1rem;">Chưa có tài khoản? <a href="#"
+                        id="switch-to-register">Đăng ký ngay</a></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('register-modal')"><i class="fas fa-times"></i></span>
+            <h3>Đăng ký</h3>
+            <div class="auth-notification" id="register-notification" style="display: none;"></div>
+            <form id="register-form" onsubmit="console.log('Register form onsubmit triggered')">
+                <div class="form-group">
+                    <label for="register-username">Tên người dùng</label>
+                    <input type="text" id="register-username" placeholder="Nhập tên người dùng" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="Nhập email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Mật khẩu</label>
+                    <input type="password" id="register-password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Xác nhận mật khẩu</label>
+                    <input type="password" id="register-confirm-password" placeholder="Nhập lại mật khẩu" required>
+                </div>
+                <button type="submit" class="btn btn-primary" onclick="console.log('Register button clicked')">Đăng
+                    ký</button>
+                <p style="text-align: center; margin-top: 1rem;">Đã có tài khoản? <a href="#" id="switch-to-login">Đăng
+                        nhập</a></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="forgot-password-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('forgot-password-modal')"><i
+                    class="fas fa-times"></i></span>
+            <h3>Khôi phục mật khẩu</h3>
+            <div class="auth-notification" id="forgot-notification" style="display: none;"></div>
+            <form id="forgot-password-form">
+                <div class="form-group">
+                    <label for="forgot-email">Email</label>
+                    <input type="email" id="forgot-email" placeholder="Nhập email đã đăng ký" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Gửi yêu cầu khôi phục</button>
+                <p style="text-align: center; margin-top: 1rem;">Đã nhớ mật khẩu? <a href="#" id="back-to-login">Quay
+                        lại đăng nhập</a></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="duplicate-result-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="mainView.closeModal('duplicate-result-modal')"><i
+                    class="fas fa-times"></i></span>
+            <h3>Kết quả kiểm tra trùng lặp</h3>
+            <div class="loading" id="duplicate-loading">
+                <div class="loading-spinner"></div>
+                <p>Đang kiểm tra...</p>
+            </div>
+            <div id="duplicate-result-content" style="display: none;">
+                <div class="result-summary">
+                    <div class="progress-container">
+                        <div class="progress-circle" id="progress-circle">
+                            <div class="progress-value" id="progress-value">0%</div>
+                        </div>
+                    </div>
+                    <div class="result-info">
+                        <p id="duplicate-percentage" class="result-percentage">Tỷ lệ trùng lặp: 0%</p>
+                        <p id="duplicate-verdict" class="result-verdict">Chưa có kết quả</p>
+                    </div>
+                </div>
+                <div id="duplicate-text" class="file-preview"></div>
+                <h4 class="sources-heading">Nguồn trùng lặp đã tìm thấy</h4>
+                <div id="duplicate-sources" class="source-links"></div>
+                <div class="result-actions">
+                    <button class="btn btn-outline" id="download-result"><i class="fas fa-download"></i> Tải kết
+                        quả</button>
+                    <button class="btn btn-primary" id="save-result"><i class="fas fa-save"></i> Lưu kết quả</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>MediaVault</h4>
+                    <p>Nền tảng kiểm tra trùng lặp thông minh với công nghệ AI tiên tiến. Bảo vệ tính nguyên bản của nội
+                        dung của bạn.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên kết</h4>
+                    <ul>
+                        <li><a href="index.html">Trang chủ</a></li>
+                        <li><a href="check.html">Kiểm tra</a></li>
+                        <li><a href="history.html">Lịch sử</a></li>
+                        <li><a href="subscription.html">Gói dịch vụ</a></li>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên hệ</h4>
+                    <p><i class="fas fa-envelope"></i> Email: support@mediavault.com</p>
+                    <p><i class="fas fa-phone-alt"></i> Hotline: 0123 456 789</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Địa chỉ: Hà Nội, Việt Nam</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Theo dõi chúng tôi</h4>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-facebook"></i></a>
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-twitter"></i></a>
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-instagram"></i></a>
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2023 MediaVault. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/utils/performance.js"></script>
+    <script src="assets/js/utils/email.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api/mongodb.js"></script>
+    <script src="assets/js/api/plagiarism.js"></script>
+    <script src="assets/js/model/userModel.js"></script>
+    <script src="assets/js/model/fileModel.js"></script>
+    <script src="assets/js/view/authView.js"></script>
+    <script src="assets/js/view/mainView.js"></script>
+    <script src="assets/js/view/adminView.js"></script>
+    <script src="assets/js/controller/authController.js"></script>
+    <script src="assets/js/controller/mainController.js"></script>
+    <script src="assets/js/controller/adminController.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        // Đảm bảo DOM đã được tải hoàn toàn
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM fully loaded');
+
+            // Initialize models
+            if (typeof UserModel !== 'undefined' && !window.userModel) {
+                window.userModel = new UserModel();
+                console.log('UserModel initialized');
+
+                // Bật chế độ gỡ lỗi nếu cần
+                if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                    window.userModel.enableDebugMode();
+                }
+            }
+
+            // Kiểm tra xem các đối tượng cần thiết đã được tạo chưa
+            if (typeof AuthView !== 'undefined' && !window.authView) {
+                window.authView = new AuthView();
+                console.log('AuthView initialized');
+            }
+
+            // Initialize controller if needed
+            if (typeof AuthController !== 'undefined' && !window.authController && window.userModel && window.authView) {
+                window.authController = new AuthController(window.userModel, window.authView);
+                console.log('AuthController initialized');
+            }
+
+            // Directly add event listeners to the forms
+            const registerForm = document.getElementById('register-form');
+            if (registerForm) {
+                console.log('Found register form, adding submit handler');
+                registerForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    console.log('Register form submitted via direct handler');
+
+                    const username = document.getElementById('register-username').value;
+                    const email = document.getElementById('register-email').value;
+                    const password = document.getElementById('register-password').value;
+                    const confirmPassword = document.getElementById('register-confirm-password').value;
+
+                    // Check if passwords match
+                    if (password !== confirmPassword) {
+                        if (window.authController) {
+                            window.authController.showNotificationInElement('register-notification', 'Mật khẩu xác nhận không khớp!', 'error');
+                        } else {
+                            alert('Mật khẩu xác nhận không khớp!');
+                        }
+                        return;
+                    }
+
+                    // Call the register method if userModel is available
+                    if (window.userModel) {
+                        window.userModel.register(email, password, username)
+                            .then(function (user) {
+                                console.log('Registration successful', user);
+
+                                // Show success notification
+                                if (window.authController) {
+                                    window.authController.showNotificationInElement('register-notification', 'Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.', 'success');
+
+                                    // Switch to login after a delay
+                                    setTimeout(function () {
+                                        window.authView.closeModal('register-modal');
+                                        window.authView.showModal('login-modal');
+                                        window.authController.showNotificationInElement('login-notification', 'Tài khoản đã được tạo thành công, vui lòng đăng nhập.', 'success');
+                                    }, 2000);
+                                } else {
+                                    alert('Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.');
+                                    setTimeout(function () {
+                                        window.authView.closeModal('register-modal');
+                                        window.authView.showModal('login-modal');
+                                    }, 2000);
+                                }
+                            })
+                            .catch(function (error) {
+                                console.error('Registration error', error);
+                                if (window.authController) {
+                                    window.authController.showNotificationInElement('register-notification', error.message || 'Đăng ký thất bại!', 'error');
+                                } else {
+                                    alert(error.message || 'Đăng ký thất bại!');
+                                }
+                            });
+                    } else {
+                        console.error('UserModel not available');
+                        alert('Lỗi: Không thể đăng ký vì thiếu UserModel');
+                    }
+                });
+            } else {
+                console.error('Register form not found');
+            }
+
+            // Gắn sự kiện cho các nút đăng nhập/đăng ký
+            const loginLink = document.getElementById('login-link');
+            if (loginLink) {
+                loginLink.addEventListener('click', function () {
+                    console.log('Login link clicked');
+                    if (window.authView) {
+                        window.authView.showModal('login-modal');
+                    } else {
+                        console.error('authView not initialized');
+                    }
+                });
+            }
+
+            const registerLink = document.getElementById('register-link');
+            if (registerLink) {
+                registerLink.addEventListener('click', function () {
+                    console.log('Register link clicked');
+                    if (window.authView) {
+                        window.authView.showModal('register-modal');
+                    } else {
+                        console.error('authView not initialized');
+                    }
+                });
+            }
+
+            const switchToRegister = document.getElementById('switch-to-register');
+            if (switchToRegister) {
+                switchToRegister.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    console.log('Switch to register clicked');
+                    if (window.authView) {
+                        window.authView.closeModal('login-modal');
+                        window.authView.showModal('register-modal');
+                    }
+                });
+            }
+
+            const switchToLogin = document.getElementById('switch-to-login');
+            if (switchToLogin) {
+                switchToLogin.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    console.log('Switch to login clicked');
+                    if (window.authView) {
+                        window.authView.closeModal('register-modal');
+                        window.authView.showModal('login-modal');
+                    }
+                });
+            }
+
+            // Nút kiểm tra và các sự kiện
+            const checkButton = document.getElementById('check-btn');
+            if (checkButton) {
+                checkButton.addEventListener('click', async () => {
+                    // Kiểm tra và khởi tạo MainController nếu chưa được khởi tạo
+                    if (!window.mainController) {
+                        console.log("MainController not initialized. Initializing now...");
+
+                        // Kiểm tra xem MainView, MainController và userModel đã được định nghĩa chưa
+                        if (window.MainController && window.MainView && window.userModel) {
+                            // Khởi tạo các components cần thiết
+                            if (!window.mainView) {
+                                window.mainView = new MainView();
+                            }
+
+                            const fileModel = new FileModel();
+                            const plagiarismAPI = new PlagiarismAPI();
+
+                            // Khởi tạo MainController
+                            window.mainController = new MainController(fileModel, window.mainView, plagiarismAPI, window.userModel);
+                            console.log("MainController initialized on demand");
+                        } else {
+                            console.error("Required components not available for initializing MainController");
+                            if (window.MainView && !window.mainView) {
+                                window.mainView = new MainView();
+                            }
+                            if (window.mainView) {
+                                window.mainView.showNotification('Lỗi khởi tạo hệ thống. Vui lòng tải lại trang.', 'error');
+                            } else {
+                                alert('Lỗi khởi tạo hệ thống. Vui lòng tải lại trang.');
+                            }
+                            return;
+                        }
+                    }
+
+                    // Gọi phương thức kiểm tra trùng lặp
+                    if (window.mainController) {
+                        window.mainController.checkDuplicate();
+                    } else {
+                        console.error("MainController is still not initialized!");
+                        alert('Lỗi hệ thống. Vui lòng tải lại trang và thử lại.');
+                    }
+                });
+            }
+
+            // Thiết lập loại kiểm tra
+            setupCheckTypes();
+
+            // Thiết lập tùy chọn nâng cao
+            setupAdvancedOptions();
+
+            // Thiết lập thanh trượt độ chính xác
+            setupAccuracySlider();
+
+            // Thiết lập khu vực kéo thả tệp
+            setupDropZones();
+
+            // Xử lý nút đặt lại mật khẩu
+            const resetPasswordBtn = document.getElementById('reset-password-btn');
+            if (resetPasswordBtn) {
+                resetPasswordBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const email = prompt("Nhập email của bạn để đặt lại mật khẩu:");
+                    if (!email) return;
+
+                    if (!window.userModel) {
+                        alert("Lỗi: Không thể đặt lại mật khẩu vì thiếu UserModel");
+                        return;
+                    }
+
+                    // Hiển thị thông báo đang xử lý
+                    if (window.authController) {
+                        window.authController.showNotificationInElement('login-notification', 'Đang xử lý yêu cầu đặt lại mật khẩu...', 'info');
+                    }
+
+                    // Gọi phương thức đặt lại mật khẩu
+                    window.userModel.resetPassword(email)
+                        .then(tempPassword => {
+                            if (tempPassword) {
+                                // Hiển thị mật khẩu tạm thời
+                                if (window.authController) {
+                                    window.authController.showNotificationInElement('login-notification', `Mật khẩu tạm thời: ${tempPassword}`, 'success');
+                                } else {
+                                    alert(`Mật khẩu tạm thời của bạn là: ${tempPassword}\nVui lòng đổi mật khẩu sau khi đăng nhập.`);
+                                }
+                            } else {
+                                // Không tìm thấy email
+                                if (window.authController) {
+                                    window.authController.showNotificationInElement('login-notification', 'Không tìm thấy tài khoản với email này.', 'error');
+                                } else {
+                                    alert("Không tìm thấy tài khoản với email này.");
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Reset password error:', error);
+                            if (window.authController) {
+                                window.authController.showNotificationInElement('login-notification', 'Có lỗi xảy ra, vui lòng thử lại sau.', 'error');
+                            } else {
+                                alert("Có lỗi xảy ra, vui lòng thử lại sau.");
+                            }
+                        });
+                });
+            }
+        });
+
+        // Các hàm hỗ trợ
+        function setupCheckTypes() {
+            const checkTypes = document.querySelectorAll('.check-type');
+            const textInputArea = document.querySelector('.text-input-area');
+            const fileUploadArea = document.querySelector('.file-upload-area');
+            const imageUploadArea = document.getElementById('image-upload-area');
+            const videoUploadArea = document.getElementById('video-upload-area');
+
+            if (checkTypes) {
+                checkTypes.forEach(type => {
+                    type.addEventListener('click', () => {
+                        checkTypes.forEach(t => t.classList.remove('active'));
+                        type.classList.add('active');
+                        const typeText = type.dataset.type;
+
+                        // Hide all upload areas
+                        textInputArea.style.display = 'none';
+                        fileUploadArea.style.display = 'none';
+                        imageUploadArea.style.display = 'none';
+                        videoUploadArea.style.display = 'none';
+
+                        // Show the selected area
+                        if (typeText === 'text') {
+                            textInputArea.style.display = 'block';
+                        } else if (typeText === 'file') {
+                            fileUploadArea.style.display = 'block';
+                        } else if (typeText === 'image') {
+                            imageUploadArea.style.display = 'block';
+                        } else if (typeText === 'video') {
+                            videoUploadArea.style.display = 'block';
+                        }
+                    });
+                });
+            }
+        }
+
+        function setupAdvancedOptions() {
+            // Advanced options toggle
+            const showAdvanced = document.getElementById('show-advanced');
+            if (showAdvanced) {
+                showAdvanced.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const advancedOptions = document.querySelector('.advanced-options');
+                    if (advancedOptions.style.display === 'none') {
+                        advancedOptions.style.display = 'block';
+                        this.innerHTML = '<i class="fas fa-times"></i> Ẩn tùy chọn nâng cao';
+                    } else {
+                        advancedOptions.style.display = 'none';
+                        this.innerHTML = '<i class="fas fa-cog"></i> Tùy chọn nâng cao';
+                    }
+                });
+            }
+        }
+
+        function setupAccuracySlider() {
+            // Accuracy slider
+            const accuracySlider = document.getElementById('accuracy-slider');
+            const accuracyValue = document.getElementById('accuracy-value');
+
+            if (accuracySlider && accuracyValue) {
+                accuracySlider.addEventListener('input', function () {
+                    accuracyValue.textContent = this.value;
+                });
+            }
+        }
+
+        function setupDropZones() {
+            // File drop zones
+            setupDropZone('file-upload-area', 'file-input');
+            setupDropZone('image-upload-area', 'image-input');
+            setupDropZone('video-upload-area', 'video-input');
+        }
+
+        function setupDropZone(dropZoneId, inputId) {
+            const dropZone = document.getElementById(dropZoneId);
+            const input = document.getElementById(inputId);
+
+            if (!dropZone || !input) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropZone.style.borderColor = 'var(--primary-color)';
+            }
+
+            function unhighlight() {
+                dropZone.style.borderColor = 'var(--gray-300)';
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                input.files = files;
+            }
+        }
+    </script>
+</body>
+
+</html>

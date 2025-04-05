@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page - MediaVault</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .test-section h3 {
+            margin-bottom: 15px;
+        }
+
+        .test-btn {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .result-box {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            overflow: auto;
+            max-height: 300px;
+            border: 1px solid #e9ecef;
+        }
+
+        .success {
+            color: #28a745;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .code {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/img/logo.webp" alt="MediaVault Logo">
+                    <span>MediaVault</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
+                        <li><a href="check.html"><i class="fas fa-search"></i> Kiểm tra</a></li>
+                        <li><a href="history.html"><i class="fas fa-history"></i> Lịch sử</a></li>
+                        <li><a href="subscription.html"><i class="fas fa-crown"></i> Gói dịch vụ</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="test-container">
+            <h2>API Test Page</h2>
+            <p>Use this page to test the Copyleaks and MongoDB APIs.</p>
+
+            <div class="test-section">
+                <h3>Copyleaks API Tests</h3>
+                <button id="test-copyleaks-token" class="btn btn-primary test-btn">Test Auth Token</button>
+                <button id="test-copyleaks-scan" class="btn btn-primary test-btn">Test Plagiarism Check</button>
+                <div id="copyleaks-result" class="result-box">Results will appear here...</div>
+            </div>
+
+            <div class="test-section">
+                <h3>MongoDB API Tests</h3>
+                <button id="test-mongodb-connection" class="btn btn-primary test-btn">Test Connection</button>
+                <button id="test-mongodb-save" class="btn btn-primary test-btn">Test Save</button>
+                <button id="test-mongodb-find" class="btn btn-primary test-btn">Test Find</button>
+                <div id="mongodb-result" class="result-box">Results will appear here...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api/mongodb.js"></script>
+    <script src="assets/js/api/plagiarism.js"></script>
+    <script src="assets/js/view/mainView.js"></script>
+
+    <script>
+        // Mock mainView for notifications if it doesn't exist
+        if (!window.mainView) {
+            window.mainView = {
+                showNotification: function (message, type) {
+                    console.log(`Notification (${type}): ${message}`);
+                    alert(`${type.toUpperCase()}: ${message}`);
+                }
+            };
+        }
+
+        // Helper functions
+        function logSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML += `<div class="success"><i class="fas fa-check-circle"></i> SUCCESS: ${message}</div>`;
+            console.log('SUCCESS:', message);
+        }
+
+        function logError(elementId, message, error) {
+            const element = document.getElementById(elementId);
+            element.innerHTML += `<div class="error"><i class="fas fa-times-circle"></i> ERROR: ${message}</div>`;
+            if (error) {
+                element.innerHTML += `<div class="code">${JSON.stringify(error, null, 2)}</div>`;
+                console.error('ERROR:', message, error);
+            } else {
+                console.error('ERROR:', message);
+            }
+        }
+
+        function logInfo(elementId, message, data) {
+            const element = document.getElementById(elementId);
+            element.innerHTML += `<div><i class="fas fa-info-circle"></i> INFO: ${message}</div>`;
+            if (data) {
+                element.innerHTML += `<div class="code">${JSON.stringify(data, null, 2)}</div>`;
+                console.log('INFO:', message, data);
+            } else {
+                console.log('INFO:', message);
+            }
+        }
+
+        // Copyleaks API Tests
+        document.getElementById('test-copyleaks-token').addEventListener('click', async function () {
+            const resultElement = document.getElementById('copyleaks-result');
+            resultElement.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Testing Copyleaks API token...</div>';
+
+            try {
+                const api = new PlagiarismAPI();
+                const token = await api.getAccessToken();
+
+                if (token) {
+                    logSuccess('copyleaks-result', 'Successfully obtained access token!');
+                    logInfo('copyleaks-result', 'Token info:', {
+                        token: token.substring(0, 10) + '...',
+                        expires: api.tokenExpiration
+                    });
+                } else {
+                    logError('copyleaks-result', 'Failed to get access token.');
+                }
+            } catch (error) {
+                logError('copyleaks-result', 'Error getting access token:', error);
+            }
+        });
+
+        document.getElementById('test-copyleaks-scan').addEventListener('click', async function () {
+            const resultElement = document.getElementById('copyleaks-result');
+            resultElement.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Testing Copyleaks plagiarism check...</div>';
+
+            const testContent = `This is a test content for plagiarism detection. 
+            The quick brown fox jumps over the lazy dog.
+            Some of this content might be found online to test the detection capabilities.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.`;
+
+            try {
+                logInfo('copyleaks-result', 'Starting plagiarism check with test content...');
+                const result = await PlagiarismAPI.check(testContent, 'text');
+
+                if (result) {
+                    logSuccess('copyleaks-result', 'Successfully completed plagiarism check!');
+                    logInfo('copyleaks-result', 'Check results:', result);
+                } else {
+                    logError('copyleaks-result', 'Failed to complete plagiarism check.');
+                }
+            } catch (error) {
+                logError('copyleaks-result', 'Error performing plagiarism check:', error);
+            }
+        });
+
+        // MongoDB API Tests
+        document.getElementById('test-mongodb-connection').addEventListener('click', async function () {
+            const resultElement = document.getElementById('mongodb-result');
+            resultElement.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Testing MongoDB connection...</div>';
+
+            try {
+                const mongodb = new MongoDB();
+                const connectionResult = await mongodb.connect();
+
+                if (connectionResult) {
+                    logSuccess('mongodb-result', 'Successfully connected to MongoDB!');
+                    logInfo('mongodb-result', 'Connection info:', {
+                        database: mongodb.database,
+                        dataSource: mongodb.dataSource,
+                        isConnected: mongodb.isConnected
+                    });
+                } else {
+                    logError('mongodb-result', 'Failed to connect to MongoDB.');
+                }
+            } catch (error) {
+                logError('mongodb-result', 'Error connecting to MongoDB:', error);
+            }
+        });
+
+        document.getElementById('test-mongodb-save').addEventListener('click', async function () {
+            const resultElement = document.getElementById('mongodb-result');
+            resultElement.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Testing MongoDB save operation...</div>';
+
+            try {
+                const mongodb = new MongoDB();
+                await mongodb.connect();
+
+                const testData = {
+                    name: 'Test Document',
+                    description: 'This is a test document created by the API test page',
+                    createdAt: new Date().toISOString(),
+                    testValue: Math.floor(Math.random() * 1000)
+                };
+
+                logInfo('mongodb-result', 'Attempting to save test document:', testData);
+
+                const saveResult = await mongodb.save('test_collection', testData);
+
+                if (saveResult && saveResult.insertedId) {
+                    logSuccess('mongodb-result', 'Successfully saved document to MongoDB!');
+                    logInfo('mongodb-result', 'Save result:', saveResult);
+
+                    // Store ID for the find test
+                    window.lastTestDocumentId = saveResult.insertedId;
+                } else {
+                    logError('mongodb-result', 'Failed to save document to MongoDB.');
+                }
+            } catch (error) {
+                logError('mongodb-result', 'Error saving to MongoDB:', error);
+            }
+        });
+
+        document.getElementById('test-mongodb-find').addEventListener('click', async function () {
+            const resultElement = document.getElementById('mongodb-result');
+            resultElement.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Testing MongoDB find operation...</div>';
+
+            try {
+                const mongodb = new MongoDB();
+                await mongodb.connect();
+
+                // Try to find the last saved document if available
+                let query = {};
+                if (window.lastTestDocumentId) {
+                    query = { _id: window.lastTestDocumentId };
+                    logInfo('mongodb-result', `Searching for document with ID: ${window.lastTestDocumentId}`);
+                } else {
+                    logInfo('mongodb-result', 'Searching for all test documents');
+                }
+
+                const findResult = await mongodb.find('test_collection', query);
+
+                if (findResult && Array.isArray(findResult)) {
+                    logSuccess('mongodb-result', `Successfully found ${findResult.length} document(s) in MongoDB!`);
+                    logInfo('mongodb-result', 'Find result:', findResult);
+                } else {
+                    logError('mongodb-result', 'Failed to find documents in MongoDB.');
+                }
+            } catch (error) {
+                logError('mongodb-result', 'Error finding documents in MongoDB:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaVault - Lịch sử kiểm tra</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/img/logo.webp" alt="MediaVault Logo">
+                    <span>MediaVault</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
+                        <li><a href="check.html"><i class="fas fa-search"></i> Kiểm tra</a></li>
+                        <li><a href="history.html" class="active"><i class="fas fa-history"></i> Lịch sử</a></li>
+                        <li><a href="subscription.html"><i class="fas fa-crown"></i> Gói dịch vụ</a></li>
+                        <li class="guest-only"><a href="#" id="login-link" class="btn btn-outline"><i
+                                    class="fas fa-sign-in-alt"></i> Đăng nhập</a></li>
+                        <li class="guest-only"><a href="#" id="register-link" class="btn btn-primary"><i
+                                    class="fas fa-user-plus"></i> Đăng ký</a></li>
+                        <li class="user-only" style="display: none;">
+                            <div class="user-dropdown">
+                                <div class="user-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span id="username-display"></span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-content">
+                                    <a href="#" id="profile-link"><i class="fas fa-user"></i> Hồ sơ</a>
+                                    <a href="#" id="settings-link"><i class="fas fa-cog"></i> Cài đặt</a>
+                                    <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="section history-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Lịch sử kiểm tra</h2>
+                <div class="section-actions">
+                    <div class="search-box">
+                        <input type="text" id="search-history" placeholder="Tìm kiếm trong lịch sử..."
+                            class="form-control">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="btn btn-outline dropdown-toggle">
+                            <i class="fas fa-filter"></i> Lọc
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="filter-text" checked>
+                                    <label for="filter-text">Văn bản</label>
+                                </div>
+                            </div>
+                            <div class="dropdown-item">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="filter-file" checked>
+                                    <label for="filter-file">Tệp</label>
+                                </div>
+                            </div>
+                            <div class="dropdown-item">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="filter-image" checked>
+                                    <label for="filter-image">Hình ảnh</label>
+                                </div>
+                            </div>
+                            <div class="dropdown-item">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="filter-video" checked>
+                                    <label for="filter-video">Video</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sort-dropdown">
+                        <button class="btn btn-outline dropdown-toggle">
+                            <i class="fas fa-sort"></i> Sắp xếp
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item active" data-sort="newest"><i class="fas fa-clock"></i> Mới
+                                nhất</a>
+                            <a href="#" class="dropdown-item" data-sort="oldest"><i class="fas fa-history"></i> Cũ
+                                nhất</a>
+                            <a href="#" class="dropdown-item" data-sort="highest"><i class="fas fa-arrow-up"></i> Tỷ lệ
+                                cao nhất</a>
+                            <a href="#" class="dropdown-item" data-sort="lowest"><i class="fas fa-arrow-down"></i> Tỷ lệ
+                                thấp nhất</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-only" style="display: none;">
+                <div id="history-list" class="history-list">
+                    <div class="empty-history" id="empty-history" style="display: none;">
+                        <div class="empty-content">
+                            <i class="fas fa-history"></i>
+                            <h3>Chưa có lịch sử kiểm tra nào</h3>
+                            <p>Bạn chưa thực hiện kiểm tra trùng lặp nào. Hãy bắt đầu kiểm tra ngay!</p>
+                            <a href="check.html" class="btn btn-primary"><i class="fas fa-search"></i> Kiểm tra ngay</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guest-only login-prompt">
+                <div class="login-prompt-content">
+                    <i class="fas fa-lock"></i>
+                    <h3>Vui lòng đăng nhập</h3>
+                    <p>Bạn cần đăng nhập để xem lịch sử kiểm tra của mình.</p>
+                    <div class="prompt-actions">
+                        <a href="#" id="history-login-link" class="btn btn-primary">Đăng nhập</a>
+                        <a href="#" id="history-register-link" class="btn btn-outline">Đăng ký</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('login-modal')"><i class="fas fa-times"></i></span>
+            <h3>Đăng nhập</h3>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="Nhập email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Mật khẩu</label>
+                    <input type="password" id="login-password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng nhập</button>
+                <p style="text-align: center; margin-top: 1rem;">Chưa có tài khoản? <a href="#"
+                        id="switch-to-register">Đăng ký ngay</a></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('register-modal')"><i class="fas fa-times"></i></span>
+            <h3>Đăng ký</h3>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username">Tên người dùng</label>
+                    <input type="text" id="register-username" placeholder="Nhập tên người dùng" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="Nhập email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Mật khẩu</label>
+                    <input type="password" id="register-password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Xác nhận mật khẩu</label>
+                    <input type="password" id="register-confirm-password" placeholder="Nhập lại mật khẩu" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng ký</button>
+                <p style="text-align: center; margin-top: 1rem;">Đã có tài khoản? <a href="#" id="switch-to-login">Đăng
+                        nhập</a></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="history-detail-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="mainView.closeModal('history-detail-modal')"><i
+                    class="fas fa-times"></i></span>
+            <h3>Chi tiết kiểm tra</h3>
+            <div id="history-detail-content">
+                <div class="history-detail-header">
+                    <div class="history-detail-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <div class="meta-content">
+                                <div class="meta-item-label">Ngày kiểm tra</div>
+                                <div class="meta-item-value" id="detail-date">--/--/----</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-file-alt"></i>
+                            <div class="meta-content">
+                                <div class="meta-item-label">Loại nội dung</div>
+                                <div class="meta-item-value" id="detail-type">---</div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="meta-content">
+                                <div class="meta-item-label">Trạng thái</div>
+                                <div class="meta-item-value" id="detail-status">---</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-circle" id="detail-progress-circle">
+                        <div class="detail-circle-value" id="detail-progress-value">0%</div>
+                    </div>
+                </div>
+                <div class="history-detail-content">
+                    <h4>Nội dung đã kiểm tra</h4>
+                    <div id="detail-content" class="file-preview"></div>
+                    <h4>Nguồn trùng lặp đã tìm thấy</h4>
+                    <div id="detail-sources" class="source-links"></div>
+                </div>
+                <div class="history-detail-actions">
+                    <button class="btn btn-outline" id="download-detail"><i class="fas fa-download"></i> Tải kết
+                        quả</button>
+                    <button class="btn btn-danger" id="delete-history"><i class="fas fa-trash"></i> Xóa</button>
+                    <button class="btn btn-primary" id="recheck-history"><i class="fas fa-redo"></i> Kiểm tra
+                        lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>MediaVault</h4>
+                    <p>Nền tảng kiểm tra trùng lặp thông minh với công nghệ AI tiên tiến. Bảo vệ tính nguyên bản của nội
+                        dung của bạn.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên kết</h4>
+                    <ul>
+                        <li><a href="index.html">Trang chủ</a></li>
+                        <li><a href="check.html">Kiểm tra</a></li>
+                        <li><a href="history.html">Lịch sử</a></li>
+                        <li><a href="subscription.html">Gói dịch vụ</a></li>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên hệ</h4>
+                    <p><i class="fas fa-envelope"></i> Email: support@mediavault.com</p>
+                    <p><i class="fas fa-phone-alt"></i> Hotline: 0123 456 789</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Địa chỉ: Hà Nội, Việt Nam</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Theo dõi chúng tôi</h4>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-facebook"></i></a>
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-twitter"></i></a>
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-instagram"></i></a>
+                        <a href="#" style="font-size: 1.5rem;"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2023 MediaVault. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/utils/performance.js"></script>
+    <script src="assets/js/utils/email.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api/mongodb.js"></script>
+    <script src="assets/js/api/plagiarism.js"></script>
+    <script src="assets/js/model/userModel.js"></script>
+    <script src="assets/js/model/fileModel.js"></script>
+    <script src="assets/js/view/authView.js"></script>
+    <script src="assets/js/view/mainView.js"></script>
+    <script src="assets/js/view/adminView.js"></script>
+    <script src="assets/js/controller/authController.js"></script>
+    <script src="assets/js/controller/mainController.js"></script>
+    <script src="assets/js/controller/adminController.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        document.getElementById('login-link').addEventListener('click', () => authView.showModal('login-modal'));
+        document.getElementById('register-link').addEventListener('click', () => authView.showModal('register-modal'));
+        document.getElementById('history-login-link').addEventListener('click', () => authView.showModal('login-modal'));
+        document.getElementById('history-register-link').addEventListener('click', () => authView.showModal('register-modal'));
+        document.getElementById('switch-to-register').addEventListener('click', (e) => {
+            e.preventDefault();
+            authView.closeModal('login-modal');
+            authView.showModal('register-modal');
+        });
+        document.getElementById('switch-to-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            authView.closeModal('register-modal');
+            authView.showModal('login-modal');
+        });
+
+        // Toggle dropdowns
+        document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function () {
+                const dropdownMenu = this.nextElementSibling;
+                if (dropdownMenu.style.display === 'block') {
+                    dropdownMenu.style.display = 'none';
+                } else {
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.style.display = 'none';
+                    });
+                    dropdownMenu.style.display = 'block';
+                }
+            });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.dropdown-toggle') && !event.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
+
+        // History search
+        document.getElementById('search-history').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const historyItems = document.querySelectorAll('.history-item');
+
+            historyItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Show empty state if no results
+            const visibleItems = document.querySelectorAll('.history-item[style="display: block"]');
+            if (visibleItems.length === 0 && searchTerm !== '') {
+                document.getElementById('empty-history').style.display = 'block';
+                document.getElementById('empty-history').querySelector('h3').textContent = 'Không tìm thấy kết quả';
+                document.getElementById('empty-history').querySelector('p').textContent = 'Không có kết quả nào phù hợp với từ khóa tìm kiếm của bạn.';
+            } else {
+                document.getElementById('empty-history').style.display = 'none';
+            }
+        });
+
+        // Sort history
+        document.querySelectorAll('.dropdown-item[data-sort]').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Update active class
+                document.querySelectorAll('.dropdown-item[data-sort]').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+
+                const sortType = this.dataset.sort;
+                const historyList = document.getElementById('history-list');
+                const historyItems = Array.from(historyList.querySelectorAll('.history-item'));
+
+                historyItems.sort((a, b) => {
+                    const dateA = new Date(a.dataset.date);
+                    const dateB = new Date(b.dataset.date);
+                    const percentA = parseFloat(a.dataset.percent);
+                    const percentB = parseFloat(b.dataset.percent);
+
+                    if (sortType === 'newest') {
+                        return dateB - dateA;
+                    } else if (sortType === 'oldest') {
+                        return dateA - dateB;
+                    } else if (sortType === 'highest') {
+                        return percentB - percentA;
+                    } else if (sortType === 'lowest') {
+                        return percentA - percentB;
+                    }
+                });
+
+                // Reappend elements in sorted order
+                historyItems.forEach(item => historyList.appendChild(item));
+            });
+        });
+
+        // Simulate loading history
+        window.addEventListener('DOMContentLoaded', () => {
+            if (userModel.isLoggedIn()) {
+                fileModel.getUserFiles(userModel.getCurrentUser().id)
+                    .then(files => {
+                        mainView.displayHistory(files);
+
+                        // Show empty state if no files
+                        if (files.length === 0) {
+                            document.getElementById('empty-history').style.display = 'block';
+                        } else {
+                            document.getElementById('empty-history').style.display = 'none';
+                        }
+                    });
+            }
+        });
+    </script>
+</body>
+
+</html>

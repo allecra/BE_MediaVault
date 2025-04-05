@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaVault Admin - Quản trị hệ thống</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="assets/images/logo.png" alt="MediaVault Logo">
+                        <span>MediaVault</span>
+                    </a>
+                </div>
+
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="index.html">Trang chủ</a></li>
+                        <li><a href="history.html">Lịch sử kiểm tra</a></li>
+                        <li><a href="subscription.html">Gói dịch vụ</a></li>
+                        <li><a href="admin.html" class="active admin-link">Quản trị</a></li>
+                    </ul>
+                </nav>
+
+                <div class="user-dropdown">
+                    <div class="user-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <div class="username-container">
+                            <span id="username-display"></span>
+                        </div>
+                        <a href="#" id="profile-link">
+                            <i class="fas fa-user-circle"></i> Hồ sơ
+                        </a>
+                        <a href="#" id="settings-link">
+                            <i class="fas fa-cog"></i> Cài đặt
+                        </a>
+                        <a href="#" id="logout-link" class="logout-link">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="section">
+                <h1 class="section-title">Quản trị hệ thống</h1>
+
+                <div class="admin-container">
+                    <!-- Admin tabs will be inserted here by AdminView -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>MediaVault</h4>
+                    <p>Giải pháp kiểm tra trùng lặp nội dung toàn diện cho cá nhân và doanh nghiệp.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Liên kết</h4>
+                    <ul>
+                        <li><a href="index.html">Trang chủ</a></li>
+                        <li><a href="subscription.html">Gói dịch vụ</a></li>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Liên hệ</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Liên hệ</h4>
+                    <p>Email: info@mediavault.com</p>
+                    <p>Điện thoại: (+84) 123 456 789</p>
+                    <p>Địa chỉ: Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội</p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2023 MediaVault. Tất cả các quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('login-modal')">
+                <i class="fas fa-times"></i>
+            </span>
+            <h3>Đăng nhập</h3>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Mật khẩu</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="login-remember">
+                    <label for="login-remember">Lưu đăng nhập</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng nhập</button>
+                <p class="form-footer">Chưa có tài khoản? <a href="#"
+                        onclick="authView.closeModal('login-modal'); authView.showModal('register-modal')">Đăng ký</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('register-modal')">
+                <i class="fas fa-times"></i>
+            </span>
+            <h3>Đăng ký</h3>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Mật khẩu</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Xác nhận mật khẩu</label>
+                    <input type="password" id="register-confirm-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng ký</button>
+                <p class="form-footer">Đã có tài khoản? <a href="#"
+                        onclick="authView.closeModal('register-modal'); authView.showModal('login-modal')">Đăng nhập</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/utils/performance.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/model/userModel.js"></script>
+    <script src="assets/js/api/mongodb.js"></script>
+    <script src="assets/js/view/authView.js"></script>
+    <script src="assets/js/view/adminView.js"></script>
+    <script src="assets/js/controller/authController.js"></script>
+    <script src="assets/js/controller/adminController.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+
+</html>
