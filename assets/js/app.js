@@ -60,83 +60,42 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Khởi tạo các thành phần cụ thể cho từng trang
- * @param {string} page - Tên trang hiện tại
- * @param {UserModel} userModel - Model quản lý người dùng
- * @param {MongoDB} mongoDB - Kết nối đến MongoDB
+ * Khởi tạo các thành phần của trang dựa trên trang hiện tại
  */
 function initializePageComponents(page, userModel, mongoDB) {
-    // Khởi tạo các controllers và views dựa vào trang hiện tại
-    switch (page) {
-        case 'index.html':
-        case '':
-            // Khởi tạo thành phần cho trang chủ
-            if (window.MainView && !window.mainView) {
-                window.mainView = new MainView();
-            }
-            break;
-            
-        case 'check.html':
-            // Khởi tạo thành phần cho trang kiểm tra
-            if (window.MainView && !window.mainView) {
-                window.mainView = new MainView();
-            }
-            
-            // Khởi tạo mainController cho trang kiểm tra
-            if (window.MainController && !window.mainController) {
-                const fileModel = new FileModel();
-                const plagiarismAPI = new PlagiarismAPI();
-                window.mainController = new MainController(fileModel, window.mainView, plagiarismAPI, userModel);
-                console.log("MainController initialized for check page");
-            }
-            break;
-            
-        case 'admin.html':
-            // Khởi tạo thành phần cho trang admin
-            if (window.AdminView && window.AdminController) {
-                const adminView = new AdminView();
-                const adminController = new AdminController(userModel, mongoDB);
-                
-                // Tải dữ liệu ban đầu cho dashboard
-                adminController.loadDashboard();
-            }
-            break;
-            
-        case 'history.html':
-            // Khởi tạo thành phần cho trang lịch sử
-            if (window.MainView && !window.mainView) {
-                window.mainView = new MainView();
-            }
-            
-            if (window.HistoryController) {
-                const historyController = new HistoryController(userModel, mongoDB);
-                historyController.loadHistory();
-            }
-            break;
-            
-        case 'subscription.html':
-            // Khởi tạo thành phần cho trang đăng ký gói dịch vụ
-            if (window.MainView && !window.mainView) {
-                window.mainView = new MainView();
-            }
-            
-            if (window.SubscriptionController) {
-                const subscriptionController = new SubscriptionController(userModel);
-                subscriptionController.loadPlans();
-            }
-            
-            if (window.PaymentView && window.PaymentController) {
-                const paymentView = new PaymentView();
-                const paymentController = new PaymentController(userModel, paymentView);
-            }
-            break;
-            
-        default:
-            // Khởi tạo thành phần mặc định cho các trang khác
-            if (window.MainView && !window.mainView) {
-                window.mainView = new MainView();
-            }
-            break;
+    // Khởi tạo các thành phần chung
+    window.mainView = new MainView();
+    window.authView = new AuthView();
+    window.authController = new AuthController(userModel, window.authView);
+    
+    // Khởi tạo các thành phần riêng của từng trang
+    if (page === 'index.html' || page === '' || page === '/') {
+        // Trang chủ
+        // Không cần khởi tạo thêm
+    } else if (page === 'check.html') {
+        // Trang kiểm tra trùng lặp
+        window.fileModel = new FileModel();
+        const plagiarismAPI = new PlagiarismAPI();
+        window.mainController = new MainController(window.fileModel, window.mainView, plagiarismAPI, userModel);
+        console.log("MainController initialized correctly from app.js");
+    } else if (page === 'history.html') {
+        // Trang lịch sử
+        window.fileModel = new FileModel();
+        window.historyController = new HistoryController(userModel, window.fileModel, window.mainView);
+    } else if (page === 'subscription.html') {
+        // Trang gói đăng ký
+        window.subscriptionView = new SubscriptionView();
+        window.subscriptionController = new SubscriptionController(userModel, window.mainView, window.subscriptionView);
+    } else if (page === 'storage.html') {
+        // Trang lưu trữ
+        window.fileModel = new FileModel();
+        window.storageView = new StorageView();
+        window.storageController = new StorageController(window.fileModel, userModel, window.mainView);
+    } else {
+        // Khởi tạo thành phần mặc định cho các trang khác
+        if (window.MainView && !window.mainView) {
+            window.mainView = new MainView();
+        }
     }
 }
 

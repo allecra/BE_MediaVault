@@ -32,7 +32,7 @@ class AuthController {
         
         // Listen for back to login link
         document.getElementById('back-to-login')?.addEventListener('click', (e) => {
-            e.preventDefault();
+                e.preventDefault();
             this.authView.closeModal('forgot-password-modal');
             this.authView.showModal('login-modal');
         });
@@ -89,13 +89,10 @@ class AuthController {
                     }
                     
                     // Check if redirect is needed (admin or specific page)
-                    if (user.role === 'admin') {
+                    if (user.role === 'admin' && !window.location.pathname.includes('admin.html')) {
                         console.log('Admin user detected, redirecting to admin page');
                         // Redirect to admin page
                         window.location.href = 'admin.html';
-                    } else if (user.isAdmin && window.location.pathname.includes('admin.html')) {
-                        // Already on admin page, just refresh
-                        window.location.reload();
                     } else if (sessionStorage.getItem('redirectAfterLogin')) {
                         const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
                         sessionStorage.removeItem('redirectAfterLogin');
@@ -104,9 +101,9 @@ class AuthController {
                         // Reload to update UI
                         window.location.reload();
                     }
-                }, 2000);
+                }, 1500);
             }
-        } catch (error) {
+                } catch (error) {
             console.error('Login error:', error);
             this.showNotificationInElement('login-notification', error.message || 'Đăng nhập thất bại! Vui lòng kiểm tra thông tin đăng nhập.', 'error');
             
@@ -164,7 +161,7 @@ class AuthController {
                 // Switch to login modal after a short delay
                 setTimeout(() => {
                     if (this.authView) {
-                        this.authView.closeModal('register-modal');
+                    this.authView.closeModal('register-modal');
                         this.authView.showModal('login-modal');
                         // Show a welcome message in the login notification
                         this.showNotificationInElement('login-notification', 'Tài khoản đã được tạo thành công, vui lòng đăng nhập.', 'success');
@@ -213,7 +210,7 @@ class AuthController {
                 // Show success notification
                 this.showNotification('Cập nhật tài khoản thành công!', 'success');
             }
-        } catch (error) {
+                } catch (error) {
             this.showNotification(error.message || 'Cập nhật tài khoản thất bại!', 'error');
         }
     }

@@ -7,7 +7,11 @@ class MainController {
     }
 
     async checkDuplicate(contentParam, typeParam) {
+        console.log('Bắt đầu hàm checkDuplicate');
         try {
+            // Hiển thị thông báo đang xử lý
+            this.mainView.showNotification('Đang xử lý yêu cầu...', 'info');
+            
             // Kiểm tra đăng nhập
             if (!this.userModel.isLoggedIn()) {
                 this.mainView.showNotification('Vui lòng đăng nhập để sử dụng tính năng này!', 'error');
@@ -19,13 +23,16 @@ class MainController {
                 return;
             }
             
+            // Kiểm tra nếu PlagiarismAPI không được khởi tạo
+            if (!this.plagiarismAPI) {
+                console.error('PlagiarismAPI chưa được khởi tạo đúng cách');
+                this.mainView.showNotification('Lỗi hệ thống: API kiểm tra chưa sẵn sàng', 'error');
+                return;
+            }
+            
             // Check if the user has remaining checks
             try {
                 const user = this.userModel.getCurrentUser();
-                if (!user) {
-                    throw new Error('Không thể xác nhận thông tin người dùng');
-                }
-                
                 await this.userModel.useCheck();
             } catch (error) {
                 this.mainView.showNotification(error.message, 'error');
@@ -47,6 +54,7 @@ class MainController {
                 type = typeParam;
             } else {
                 const checkType = document.querySelector('.check-type.active')?.dataset.type || 'text';
+                console.log('Loại kiểm tra được chọn:', checkType);
                 
                 if (checkType === 'text') {
                     const textInput = document.getElementById('text-input')?.value;
@@ -64,9 +72,9 @@ class MainController {
                     }
                     try {
                         content = await this.readFile(fileInput);
-                    } catch (fileReadError) {
-                        console.error('Error reading file:', fileReadError);
-                        this.mainView.showNotification(`Lỗi đọc tệp: ${fileReadError.message}`, 'error');
+                    } catch (fileError) {
+                        console.error('Lỗi đọc tệp:', fileError);
+                        this.mainView.showNotification('Không thể đọc tệp đã tải lên. Vui lòng thử lại!', 'error');
                         return;
                     }
                     type = fileInput.type.startsWith('image') ? 'image' : 
@@ -78,16 +86,11 @@ class MainController {
                         this.mainView.showNotification('Vui lòng tải lên một hình ảnh để kiểm tra!', 'warning');
                         return;
                     }
-                    // Kiểm tra kích thước file
-                    if (imageInput.size > 5 * 1024 * 1024) { // 5MB limit
-                        this.mainView.showNotification('Kích thước hình ảnh không được vượt quá 5MB!', 'error');
-                        return;
-                    }
                     try {
                         content = await this.readFile(imageInput);
-                    } catch (imageReadError) {
-                        console.error('Error reading image:', imageReadError);
-                        this.mainView.showNotification(`Lỗi đọc hình ảnh: ${imageReadError.message}`, 'error');
+                    } catch (imageError) {
+                        console.error('Lỗi đọc hình ảnh:', imageError);
+                        this.mainView.showNotification('Không thể đọc hình ảnh đã tải lên. Vui lòng thử lại!', 'error');
                         return;
                     }
                     type = 'image';
@@ -97,16 +100,11 @@ class MainController {
                         this.mainView.showNotification('Vui lòng tải lên một video để kiểm tra!', 'warning');
                         return;
                     }
-                    // Kiểm tra kích thước file
-                    if (videoInput.size > 100 * 1024 * 1024) { // 100MB limit
-                        this.mainView.showNotification('Kích thước video không được vượt quá 100MB!', 'error');
-                        return;
-                    }
                     try {
                         content = await this.readFile(videoInput);
-                    } catch (videoReadError) {
-                        console.error('Error reading video:', videoReadError);
-                        this.mainView.showNotification(`Lỗi đọc video: ${videoReadError.message}`, 'error');
+                    } catch (videoError) {
+                        console.error('Lỗi đọc video:', videoError);
+                        this.mainView.showNotification('Không thể đọc video đã tải lên. Vui lòng thử lại!', 'error');
                         return;
                     }
                     type = 'video';
@@ -119,12 +117,14 @@ class MainController {
                 return;
             }
 
+            console.log(`Bắt đầu kiểm tra nội dung loại: ${type}`);
+
             // Check the user's subscription plan for feature access
             const user = this.userModel.getCurrentUser();
-            const currentPlan = this.userModel.getCurrentPlan();
+            const currentPlan = user?.plan || 'free';
             
             // Free plan can only check text
-            if (user.plan === 'free' && type !== 'text') {
+            if (currentPlan === 'free' && type !== 'text') {
                 this.mainView.showNotification('Gói Miễn phí chỉ hỗ trợ kiểm tra văn bản. Vui lòng nâng cấp gói dịch vụ.', 'warning');
                 setTimeout(() => {
                     window.location.href = 'subscription.html';
@@ -133,7 +133,7 @@ class MainController {
             }
             
             // Basic plan can only check text and files, not images/videos
-            if (user.plan === 'basic' && (type === 'image' || type === 'video')) {
+            if (currentPlan === 'basic' && (type === 'image' || type === 'video')) {
                 this.mainView.showNotification('Gói Cơ bản không hỗ trợ kiểm tra hình ảnh và video. Vui lòng nâng cấp gói dịch vụ.', 'warning');
                 setTimeout(() => {
                     window.location.href = 'subscription.html';
@@ -152,7 +152,13 @@ class MainController {
             if (resultElement) resultElement.style.display = 'none';
 
             // Perform the check using the instance method
+            console.log('Gọi API kiểm tra trùng lặp với loại:', type);
             const result = await this.plagiarismAPI.check(content, type);
+            console.log('Kết quả từ API:', result);
+            
+            if (!result) {
+                throw new Error('Không nhận được kết quả từ API kiểm tra');
+            }
             
             // Add timestamp to result
             result.timestamp = new Date().toISOString();
@@ -161,7 +167,9 @@ class MainController {
             const fileData = {
                 id: Date.now().toString(),
                 type,
-                content: content.length > 1000 ? content.substring(0, 1000) + '...' : content, // Truncate long content
+                content: typeof content === 'string' ? 
+                    (content.length > 1000 ? content.substring(0, 1000) + '...' : content) : 
+                    'Binary content', // Truncate long content
                 result,
                 userId: user.id || user._id,
                 userEmail: user.email,
@@ -180,11 +188,17 @@ class MainController {
             if (resultElement) resultElement.style.display = 'block';
             
             // Display the result
-            this.mainView.displayDuplicateResult(result);
+            if (typeof this.mainView.displayDuplicateResult === 'function') {
+                this.mainView.displayDuplicateResult(result);
+            } else {
+                console.error('displayDuplicateResult không tồn tại trong mainView');
+                this.mainView.showNotification('Lỗi hiển thị kết quả', 'error');
+                this.mainView.closeModal('duplicate-result-modal');
+            }
             
             // Update the remaining checks indicator if it exists
             const checksRemainingElement = document.getElementById('checks-remaining');
-            if (checksRemainingElement) {
+            if (checksRemainingElement && user.checksRemaining !== undefined) {
                 checksRemainingElement.textContent = user.checksRemaining;
             }
         } catch (error) {
@@ -204,6 +218,8 @@ class MainController {
                     errorMessage = 'Định dạng tệp không được hỗ trợ. Vui lòng sử dụng định dạng khác.';
                 } else if (error.message.includes('size')) {
                     errorMessage = 'Tệp có kích thước quá lớn. Vui lòng sử dụng tệp nhỏ hơn.';
+                } else if (error.message.includes('API') || error.message.includes('khởi tạo')) {
+                    errorMessage = 'Lỗi hệ thống API. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
                 } else {
                     errorMessage = `Lỗi: ${error.message}`;
                 }

@@ -25,6 +25,7 @@
                         <li><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
                         <li><a href="check.html"><i class="fas fa-search"></i> Kiểm tra</a></li>
                         <li><a href="history.html"><i class="fas fa-history"></i> Lịch sử</a></li>
+                        <li><a href="storage.html"><i class="fas fa-hdd"></i> Lưu trữ</a></li>
                         <li><a href="subscription.html" class="active"><i class="fas fa-crown"></i> Gói dịch vụ</a></li>
                         <li class="guest-only"><a href="#" id="login-link" class="btn btn-outline"><i
                                     class="fas fa-sign-in-alt"></i> Đăng nhập</a></li>
@@ -319,6 +320,7 @@
                         <li><a href="index.html">Trang chủ</a></li>
                         <li><a href="check.html">Kiểm tra</a></li>
                         <li><a href="history.html">Lịch sử</a></li>
+                        <li><a href="storage.html">Lưu trữ</a></li>
                         <li><a href="subscription.html">Gói dịch vụ</a></li>
                         <li><a href="#">Về chúng tôi</a></li>
                     </ul>
@@ -362,137 +364,95 @@
     <script src="assets/js/controller/subscriptionController.js"></script>
     <script src="assets/js/app.js"></script>
     <script>
-        // Initialize authentication elements
-        document.getElementById('login-link').addEventListener('click', () => authView.showModal('login-modal'));
-        document.getElementById('register-link').addEventListener('click', () => authView.showModal('register-modal'));
-        document.getElementById('subscription-login-link').addEventListener('click', () => authView.showModal('login-modal'));
-        document.getElementById('subscription-register-link').addEventListener('click', () => authView.showModal('register-modal'));
-        document.getElementById('switch-to-register').addEventListener('click', (e) => {
-            e.preventDefault();
-            authView.closeModal('login-modal');
-            authView.showModal('register-modal');
-        });
-        document.getElementById('switch-to-login').addEventListener('click', (e) => {
-            e.preventDefault();
-            authView.closeModal('register-modal');
-            authView.showModal('login-modal');
-        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const userModel = new UserModel();
+            const paymentView = new PaymentView();
+            const subscriptionController = new SubscriptionController(userModel, paymentView);
 
-        // Initialize subscription page
-        document.addEventListener('DOMContentLoaded', () => {
-            // Setup payment method switching
-            const paymentMethod = document.getElementById('payment-method');
-            if (paymentMethod) {
-                paymentMethod.addEventListener('change', function () {
-                    const method = this.value;
-                    document.querySelectorAll('.payment-details').forEach(detail => {
-                        detail.style.display = 'none';
-                    });
+            // Khởi tạo controllers
+            window.subscriptionController = subscriptionController;
+            window.paymentView = paymentView;
 
-                    if (method === 'bank') {
-                        document.getElementById('bank-details').style.display = 'block';
-                    } else if (method === 'card') {
-                        document.getElementById('card-details').style.display = 'block';
-                    } else {
-                        document.getElementById('ewallet-details').style.display = 'block';
-                    }
+            // Khởi tạo kết nối MongoDB
+            if (!window.mongoDB && window.CONFIG) {
+                window.mongoDB = new MongoDB({
+                    apiKey: window.CONFIG.MONGODB_API_KEY,
+                    privateKey: window.CONFIG.MONGODB_PRIVATE_KEY,
+                    connectionString: window.CONFIG.MONGODB_CONNECTION_STRING,
+                    database: window.CONFIG.MONGODB_DATABASE,
+                    dataSource: window.CONFIG.MONGODB_DATA_SOURCE
                 });
             }
 
-            // Setup plan selection
-            document.querySelectorAll('.select-plan-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    if (!userModel.isLoggedIn()) {
-                        authView.showModal('login-modal');
-                        return;
-                    }
-
-                    const planId = this.dataset.plan;
-                    const plans = userModel.getSubscriptionPlans();
-                    const plan = plans[planId];
-
-                    // Set plan details in payment modal
-                    document.getElementById('selected-plan').value = planId;
-                    document.getElementById('selected-plan-name').textContent = plan.name;
-                    document.getElementById('payment-amount').textContent = `${plan.price.toLocaleString('vi-VN')} VNĐ`;
-                    document.getElementById('payment-ref').textContent = `MV${Date.now().toString().slice(-6)}`;
-
-                    // Show payment modal
-                    paymentView.showModal('payment-modal');
+            // Đăng ký sự kiện cho các nút chọn gói
+            document.querySelectorAll('.select-plan-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    subscriptionController.handleUpgrade(e);
                 });
             });
 
-            // Setup payment form submission
-            const paymentForm = document.getElementById('payment-form');
-            if (paymentForm) {
-                paymentForm.addEventListener('submit', async function (e) {
+            // Thiết lập sự kiện cho đăng nhập/đăng xuất
+            const loginLink = document.getElementById('login-link');
+            const registerLink = document.getElementById('register-link');
+            const subscriptionLoginLink = document.getElementById('subscription-login-link');
+            const subscriptionRegisterLink = document.getElementById('subscription-register-link');
+            const logoutLink = document.getElementById('logout-link');
+
+            if (loginLink) {
+                loginLink.addEventListener('click', (e) => {
                     e.preventDefault();
-
-                    const planId = document.getElementById('selected-plan').value;
-                    const paymentMethod = document.getElementById('payment-method').value;
-
-                    try {
-                        const result = await paymentController.processPayment(planId, {
-                            method: paymentMethod,
-                            transactionId: `txn_${Date.now()}`
-                        });
-
-                        if (result.success) {
-                            paymentView.closeModal('payment-modal');
-                            mainView.showNotification('Thanh toán thành công! Gói dịch vụ của bạn đã được nâng cấp.', 'success');
-
-                            // Update UI to reflect new plan
-                            updateUserPlanDisplay();
-                        }
-                    } catch (error) {
-                        mainView.showNotification(`Lỗi thanh toán: ${error.message}`, 'error');
-                    }
+                    window.location.href = 'login.html';
                 });
             }
 
-            // Update UI based on user's current plan
-            function updateUserPlanDisplay() {
-                if (userModel.isLoggedIn()) {
-                    const user = userModel.getCurrentUser();
-                    const currentPlan = userModel.getCurrentPlan();
-
-                    // Show/hide appropriate elements
-                    document.querySelectorAll('.user-only').forEach(el => el.style.display = 'block');
-                    document.querySelectorAll('.guest-only').forEach(el => el.style.display = 'none');
-
-                    // Update current plan info
-                    document.getElementById('username-display').textContent = user.username;
-                    document.getElementById('current-plan-name').textContent = currentPlan.name;
-                    document.getElementById('checks-remaining').textContent = user.checksRemaining;
-                    document.getElementById('plan-features').textContent = currentPlan.features.join(', ');
-
-                    // Update plan buttons
-                    document.querySelectorAll('.plan-card').forEach(card => {
-                        const planId = card.id.replace('-plan', '');
-                        const selectBtn = card.querySelector('.select-plan-btn');
-                        const currentBtn = card.querySelector('#current-plan');
-
-                        if (planId === user.plan) {
-                            selectBtn.style.display = 'none';
-                            currentBtn.style.display = 'inline-block';
-                        } else {
-                            selectBtn.style.display = 'inline-block';
-                            currentBtn.style.display = 'none';
-                        }
-                    });
-                } else {
-                    // User is not logged in
-                    document.querySelectorAll('.user-only').forEach(el => el.style.display = 'none');
-                    document.querySelectorAll('.guest-only').forEach(el => el.style.display = 'block');
-                }
+            if (registerLink) {
+                registerLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = 'register.html';
+                });
             }
 
-            // Initial UI update
-            updateUserPlanDisplay();
+            if (subscriptionLoginLink) {
+                subscriptionLoginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = 'login.html';
+                });
+            }
 
-            // Update when login/logout happens
-            document.addEventListener('user:login', updateUserPlanDisplay);
-            document.addEventListener('user:logout', updateUserPlanDisplay);
+            if (subscriptionRegisterLink) {
+                subscriptionRegisterLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = 'register.html';
+                });
+            }
+
+            if (logoutLink) {
+                logoutLink.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await userModel.logout();
+                    window.location.href = 'index.html';
+                });
+            }
+
+            // Lắng nghe sự kiện cập nhật người dùng
+            window.addEventListener('user-updated', (event) => {
+                if (event.detail && event.detail.user) {
+                    console.log('User data updated, refreshing display');
+                    subscriptionController.updateUserDisplay(event.detail.user);
+                }
+            });
+
+            // Lắng nghe sự kiện cập nhật gói dịch vụ
+            window.addEventListener('subscription-updated', (event) => {
+                if (event.detail && event.detail.user && event.detail.plan) {
+                    console.log(`Subscription updated to ${event.detail.plan}`);
+                    subscriptionController.updateUserDisplay(event.detail.user);
+                    subscriptionController.highlightCurrentPlan(event.detail.plan);
+                }
+            });
+
+            // Khởi tạo và kiểm tra đăng nhập
+            subscriptionController.initializePage();
         });
     </script>
 </body>

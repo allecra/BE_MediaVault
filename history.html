@@ -25,6 +25,7 @@
                         <li><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
                         <li><a href="check.html"><i class="fas fa-search"></i> Kiểm tra</a></li>
                         <li><a href="history.html" class="active"><i class="fas fa-history"></i> Lịch sử</a></li>
+                        <li><a href="storage.html"><i class="fas fa-hdd"></i> Lưu trữ</a></li>
                         <li><a href="subscription.html"><i class="fas fa-crown"></i> Gói dịch vụ</a></li>
                         <li class="guest-only"><a href="#" id="login-link" class="btn btn-outline"><i
                                     class="fas fa-sign-in-alt"></i> Đăng nhập</a></li>
@@ -118,11 +119,52 @@
 
             <div class="user-only" style="display: none;">
                 <div id="history-list" class="history-list">
-                    <div class="empty-history" id="empty-history" style="display: none;">
+                    <!-- Sample history item (will be generated dynamically) -->
+                    <div class="history-item" style="display: none;" data-date="2023-08-15" data-percent="65">
+                        <div class="history-item-header">
+                            <div class="history-item-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="history-item-title">
+                                <h3>Kiểm tra bài luận về trí tuệ nhân tạo</h3>
+                                <p>2000 từ</p>
+                            </div>
+                        </div>
+                        <div class="history-item-content">
+                            <div class="history-item-meta">
+                                <div class="history-item-date">
+                                    <i class="far fa-calendar"></i> 15/08/2023
+                                </div>
+                                <div class="history-item-type text">
+                                    Văn bản
+                                </div>
+                            </div>
+                            <div class="history-progress">
+                                <div class="history-progress-bar">
+                                    <div class="history-progress-fill medium" style="width: 65%"></div>
+                                </div>
+                                <div class="history-percentage">
+                                    <span>Tỷ lệ trùng lặp</span>
+                                    <span class="value">65%</span>
+                                </div>
+                            </div>
+                            <div class="history-item-actions">
+                                <button class="delete-btn" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button class="view-btn" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i> Xem chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-history" id="empty-history" data-type="empty">
                         <div class="empty-content">
                             <i class="fas fa-history"></i>
-                            <h3>Chưa có lịch sử kiểm tra nào</h3>
-                            <p>Bạn chưa thực hiện kiểm tra trùng lặp nào. Hãy bắt đầu kiểm tra ngay!</p>
+                            <h3>Chưa có lịch sử kiểm tra</h3>
+                            <p>Bạn chưa thực hiện kiểm tra trùng lặp nào. Hãy bắt đầu kiểm tra ngay để theo dõi lịch sử!
+                            </p>
                             <a href="check.html" class="btn btn-primary"><i class="fas fa-search"></i> Kiểm tra ngay</a>
                         </div>
                     </div>
@@ -256,6 +298,7 @@
                         <li><a href="index.html">Trang chủ</a></li>
                         <li><a href="check.html">Kiểm tra</a></li>
                         <li><a href="history.html">Lịch sử</a></li>
+                        <li><a href="storage.html">Lưu trữ</a></li>
                         <li><a href="subscription.html">Gói dịch vụ</a></li>
                         <li><a href="#">Về chúng tôi</a></li>
                         <li><a href="#">Điều khoản sử dụng</a></li>
@@ -287,31 +330,71 @@
     <script src="assets/js/utils/performance.js"></script>
     <script src="assets/js/utils/email.js"></script>
     <script src="assets/js/config.js"></script>
-    <script src="assets/js/api/mongodb.js"></script>
-    <script src="assets/js/api/plagiarism.js"></script>
     <script src="assets/js/model/userModel.js"></script>
     <script src="assets/js/model/fileModel.js"></script>
+    <script src="assets/js/api/mongodb.js"></script>
     <script src="assets/js/view/authView.js"></script>
     <script src="assets/js/view/mainView.js"></script>
     <script src="assets/js/view/adminView.js"></script>
     <script src="assets/js/controller/authController.js"></script>
     <script src="assets/js/controller/mainController.js"></script>
     <script src="assets/js/controller/adminController.js"></script>
+    <script src="assets/js/controller/historyController.js"></script>
     <script src="assets/js/app.js"></script>
     <script>
-        document.getElementById('login-link').addEventListener('click', () => authView.showModal('login-modal'));
-        document.getElementById('register-link').addEventListener('click', () => authView.showModal('register-modal'));
-        document.getElementById('history-login-link').addEventListener('click', () => authView.showModal('login-modal'));
-        document.getElementById('history-register-link').addEventListener('click', () => authView.showModal('register-modal'));
-        document.getElementById('switch-to-register').addEventListener('click', (e) => {
-            e.preventDefault();
-            authView.closeModal('login-modal');
-            authView.showModal('register-modal');
+        // Initialize controllers
+        const userModel = new UserModel();
+        const fileModel = new FileModel(userModel);
+        const mainView = new MainView();
+        const historyController = new HistoryController(userModel, fileModel, mainView);
+
+        // Load history when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            historyController.loadHistory();
         });
-        document.getElementById('switch-to-login').addEventListener('click', (e) => {
+
+        // Handle login/register buttons
+        document.getElementById('history-login-link').addEventListener('click', function (e) {
             e.preventDefault();
-            authView.closeModal('register-modal');
-            authView.showModal('login-modal');
+            mainView.showModal('login-modal');
+        });
+
+        document.getElementById('history-register-link').addEventListener('click', function (e) {
+            e.preventDefault();
+            mainView.showModal('register-modal');
+        });
+
+        // Switch between login and register modals
+        document.getElementById('switch-to-register').addEventListener('click', function (e) {
+            e.preventDefault();
+            mainView.closeModal('login-modal');
+            mainView.showModal('register-modal');
+        });
+
+        document.getElementById('switch-to-login').addEventListener('click', function (e) {
+            e.preventDefault();
+            mainView.closeModal('register-modal');
+            mainView.showModal('login-modal');
+        });
+
+        // Handle auth-related events to refresh history data
+        document.addEventListener('user:login', () => {
+            historyController.loadHistory();
+        });
+
+        document.addEventListener('user:logout', () => {
+            historyController.loadHistory();
+        });
+
+        document.addEventListener('history:delete', (e) => {
+            const { id } = e.detail;
+            fileModel.deleteFile(id).then(() => {
+                historyController.loadHistory();
+                mainView.showNotification('Đã xóa mục khỏi lịch sử', 'success');
+            }).catch(error => {
+                console.error('Error deleting history item:', error);
+                mainView.showNotification('Lỗi khi xóa mục lịch sử', 'error');
+            });
         });
 
         // Toggle dropdowns
@@ -397,23 +480,6 @@
                 // Reappend elements in sorted order
                 historyItems.forEach(item => historyList.appendChild(item));
             });
-        });
-
-        // Simulate loading history
-        window.addEventListener('DOMContentLoaded', () => {
-            if (userModel.isLoggedIn()) {
-                fileModel.getUserFiles(userModel.getCurrentUser().id)
-                    .then(files => {
-                        mainView.displayHistory(files);
-
-                        // Show empty state if no files
-                        if (files.length === 0) {
-                            document.getElementById('empty-history').style.display = 'block';
-                        } else {
-                            document.getElementById('empty-history').style.display = 'none';
-                        }
-                    });
-            }
         });
     </script>
 </body>

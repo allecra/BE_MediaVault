@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lưu trữ - MediaVault</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Performance optimization -->
+    <script src="assets/js/utils/performance.js"></script>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/img/logo.webp" alt="MediaVault Logo" loading="lazy">
+                    <span>MediaVault</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
+                        <li><a href="check.html"><i class="fas fa-search"></i> Kiểm tra</a></li>
+                        <li><a href="history.html"><i class="fas fa-history"></i> Lịch sử</a></li>
+                        <li><a href="storage.html" class="active"><i class="fas fa-hdd"></i> Lưu trữ</a></li>
+                        <li><a href="subscription.html"><i class="fas fa-crown"></i> Gói dịch vụ</a></li>
+                        <li class="guest-only"><a href="#" id="login-link" class="btn btn-outline"><i
+                                    class="fas fa-sign-in-alt"></i> Đăng nhập</a></li>
+                        <li class="guest-only"><a href="#" id="register-link" class="btn btn-primary"><i
+                                    class="fas fa-user-plus"></i> Đăng ký</a></li>
+                        <li class="user-only" style="display: none;">
+                            <div class="user-dropdown">
+                                <div class="user-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span id="username-display"></span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-content">
+                                    <a href="#" id="profile-link"><i class="fas fa-user"></i> Hồ sơ</a>
+                                    <a href="#" id="settings-link"><i class="fas fa-cog"></i> Cài đặt</a>
+                                    <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="storage-section">
+        <div class="container">
+            <div class="section-header">
+                <h1>Quản lý lưu trữ</h1>
+                <p>Tải lên, quản lý và tổ chức tệp tin của bạn một cách hiệu quả</p>
+            </div>
+
+            <div class="storage-wrapper">
+                <div class="storage-sidebar">
+                    <div class="storage-stats">
+                        <div class="storage-usage">
+                            <h3>Dung lượng sử dụng</h3>
+                            <div class="usage-bar">
+                                <div class="progress-bar" id="storage-progress-bar"></div>
+                            </div>
+                            <div class="usage-text">
+                                <span id="used-storage">0 MB</span> / <span id="total-storage">0 MB</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="storage-filters">
+                        <h3>Lọc tệp tin</h3>
+                        <div class="filter-group">
+                            <button class="filter-btn active" data-filter="all">
+                                <i class="fas fa-folder"></i> Tất cả
+                            </button>
+                            <button class="filter-btn" data-filter="image">
+                                <i class="fas fa-image"></i> Hình ảnh
+                            </button>
+                            <button class="filter-btn" data-filter="document">
+                                <i class="fas fa-file-alt"></i> Văn bản
+                            </button>
+                            <button class="filter-btn" data-filter="video">
+                                <i class="fas fa-video"></i> Video
+                            </button>
+                            <button class="filter-btn" data-filter="audio">
+                                <i class="fas fa-music"></i> Âm thanh
+                            </button>
+                            <button class="filter-btn" data-filter="other">
+                                <i class="fas fa-file"></i> Khác
+                            </button>
+                        </div>
+                    </div>
+                    <div class="upload-section">
+                        <button id="upload-btn" class="btn btn-primary btn-block">
+                            <i class="fas fa-cloud-upload-alt"></i> Tải lên tệp mới
+                        </button>
+                    </div>
+                </div>
+
+                <div class="storage-content">
+                    <div class="storage-toolbar">
+                        <div class="search-files">
+                            <input type="text" id="search-files" placeholder="Tìm kiếm tệp tin...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="view-options">
+                            <button class="view-btn active" data-view="grid">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button class="view-btn" data-view="list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                        <div class="sort-options">
+                            <select id="sort-files">
+                                <option value="newest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                                <option value="name-asc">Tên (A-Z)</option>
+                                <option value="name-desc">Tên (Z-A)</option>
+                                <option value="size-asc">Dung lượng (Tăng dần)</option>
+                                <option value="size-desc">Dung lượng (Giảm dần)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="files-container" id="files-container">
+                        <div class="loading-state" id="loading-files">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Đang tải tệp tin...</p>
+                        </div>
+
+                        <div class="empty-state" id="empty-files" style="display: none;">
+                            <i class="fas fa-folder-open"></i>
+                            <h3>Chưa có tệp tin nào</h3>
+                            <p>Hãy tải lên tệp tin đầu tiên của bạn</p>
+                            <button class="btn btn-primary upload-empty-btn">
+                                <i class="fas fa-cloud-upload-alt"></i> Tải lên ngay
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="pagination" id="files-pagination">
+                        <button class="pagination-btn" id="prev-page" disabled>
+                            <i class="fas fa-chevron-left"></i> Trước
+                        </button>
+                        <div class="pagination-info">
+                            Trang <span id="current-page">1</span> / <span id="total-pages">1</span>
+                        </div>
+                        <button class="pagination-btn" id="next-page" disabled>
+                            Sau <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Upload -->
+    <div class="modal" id="upload-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-upload-modal"><i class="fas fa-times"></i></span>
+            <h3>Tải lên tệp tin</h3>
+
+            <div class="upload-area" id="upload-area">
+                <input type="file" id="file-upload" multiple style="display: none;">
+                <div class="upload-zone" id="upload-zone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Kéo và thả tệp tin tại đây hoặc nhấp để chọn tệp</p>
+                    <span>Hỗ trợ tất cả các định dạng tệp tin. Tối đa 50MB mỗi tệp</span>
+                </div>
+            </div>
+
+            <div class="upload-preview" id="upload-preview">
+                <h4>Danh sách tệp tin (<span id="file-count">0</span>)</h4>
+                <div class="upload-files-list" id="upload-files-list"></div>
+            </div>
+
+            <div class="upload-actions">
+                <button id="cancel-upload" class="btn btn-outline">Hủy</button>
+                <button id="start-upload" class="btn btn-primary">Tải lên</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal File Preview -->
+    <div class="modal" id="file-preview-modal">
+        <div class="modal-content modal-lg">
+            <span class="close-btn" id="close-preview-modal"><i class="fas fa-times"></i></span>
+            <div class="file-preview-container">
+                <div class="file-preview-header">
+                    <h3 id="preview-file-name">Tên tệp tin</h3>
+                    <div class="file-actions">
+                        <button class="btn btn-outline btn-sm" id="download-file">
+                            <i class="fas fa-download"></i> Tải xuống
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="delete-file">
+                            <i class="fas fa-trash-alt"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+                <div class="file-preview-content" id="file-preview-content"></div>
+                <div class="file-metadata">
+                    <div class="metadata-item">
+                        <span class="metadata-label">Loại tệp:</span>
+                        <span id="file-type">-</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Kích thước:</span>
+                        <span id="file-size">-</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Ngày tải lên:</span>
+                        <span id="file-date">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete Confirmation -->
+    <div class="modal" id="delete-confirm-modal">
+        <div class="modal-content modal-sm">
+            <span class="close-btn" id="close-delete-modal"><i class="fas fa-times"></i></span>
+            <div class="confirm-delete">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Xác nhận xóa</h3>
+                <p>Bạn có chắc chắn muốn xóa tệp tin "<span id="delete-file-name"></span>"?</p>
+                <p class="warning-text">Thao tác này không thể hoàn tác!</p>
+                <div class="confirm-actions">
+                    <button id="cancel-delete" class="btn btn-outline">Hủy</button>
+                    <button id="confirm-delete" class="btn btn-danger">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('login-modal')"><i class="fas fa-times"></i></span>
+            <h3>Đăng nhập</h3>
+            <div class="auth-notification" id="login-notification" style="display: none;"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="Nhập email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Mật khẩu</label>
+                    <input type="password" id="login-password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div class="form-actions-row">
+                    <div class="checkbox">
+                        <input type="checkbox" id="remember-me">
+                        <label for="remember-me">Ghi nhớ đăng nhập</label>
+                    </div>
+                    <a href="#" id="forgot-password" class="forgot-password-link">Quên mật khẩu?</a>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng nhập</button>
+                <p style="text-align: center; margin-top: 1rem;">Chưa có tài khoản? <a href="#"
+                        id="switch-to-register">Đăng ký ngay</a></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="authView.closeModal('register-modal')"><i class="fas fa-times"></i></span>
+            <h3>Đăng ký</h3>
+            <div class="auth-notification" id="register-notification" style="display: none;"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username">Tên người dùng</label>
+                    <input type="text" id="register-username" placeholder="Nhập tên người dùng" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="Nhập email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Mật khẩu</label>
+                    <input type="password" id="register-password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Xác nhận mật khẩu</label>
+                    <input type="password" id="register-confirm-password" placeholder="Nhập lại mật khẩu" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng ký</button>
+                <p style="text-align: center; margin-top: 1rem;">Đã có tài khoản? <a href="#" id="switch-to-login">Đăng
+                        nhập</a></p>
+            </form>
+        </div>
+    </div>
+
+    <footer class="storage-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="assets/img/logo.webp" alt="MediaVault Logo" loading="lazy">
+                    <span>MediaVault</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-links-column">
+                        <h4>Tính năng</h4>
+                        <ul>
+                            <li><a href="check.html">Kiểm tra trùng lặp</a></li>
+                            <li><a href="storage.html">Lưu trữ</a></li>
+                            <li><a href="subscription.html">Gói dịch vụ</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-column">
+                        <h4>Hỗ trợ</h4>
+                        <ul>
+                            <li><a href="#">Trung tâm trợ giúp</a></li>
+                            <li><a href="#">Liên hệ</a></li>
+                            <li><a href="#">FAQs</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-column">
+                        <h4>Pháp lý</h4>
+                        <ul>
+                            <li><a href="#">Điều khoản sử dụng</a></li>
+                            <li><a href="#">Chính sách bảo mật</a></li>
+                            <li><a href="#">Cookie</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2023 MediaVault. Tất cả các quyền được bảo lưu.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/utils/performance.js"></script>
+    <script src="assets/js/utils/email.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/model/userModel.js"></script>
+    <script src="assets/js/model/fileModel.js"></script>
+    <script src="assets/js/api/mongodb.js"></script>
+    <script src="assets/js/api/plagiarism.js"></script>
+    <script src="assets/js/view/authView.js"></script>
+    <script src="assets/js/view/mainView.js"></script>
+    <script src="assets/js/view/storageView.js"></script>
+    <script src="assets/js/controller/authController.js"></script>
+    <script src="assets/js/controller/mainController.js"></script>
+    <script src="assets/js/controller/adminController.js"></script>
+    <script src="assets/js/app.js"></script>
+
+    <script>
+        // Mã JavaScript để thêm chức năng cho các nút lọc và tùy chọn hiển thị
+        document.addEventListener('DOMContentLoaded', function () {
+            // Các biến cho các phần tử giao diện
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const viewButtons = document.querySelectorAll('.view-btn');
+            const sortSelect = document.getElementById('sort-files');
+            const searchInput = document.getElementById('search-files');
+            const filesContainer = document.getElementById('files-container');
+            const loadingFiles = document.getElementById('loading-files');
+            const emptyFiles = document.getElementById('empty-files');
+
+            // Dữ liệu mẫu cho tệp tin
+            const mockFiles = [
+                { id: 1, name: 'Báo cáo Cuối kỳ.docx', type: 'document', size: '245 KB', date: '2023-04-12', icon: 'fas fa-file-word text-primary' },
+                { id: 2, name: 'Bài thuyết trình.pptx', type: 'document', size: '1.2 MB', date: '2023-04-10', icon: 'fas fa-file-powerpoint text-danger' },
+                { id: 3, name: 'Ảnh Đại diện.jpg', type: 'image', size: '450 KB', date: '2023-04-08', icon: 'fas fa-file-image text-success' },
+                { id: 4, name: 'Video Hội nghị.mp4', type: 'video', size: '12.5 MB', date: '2023-04-05', icon: 'fas fa-file-video text-warning' },
+                { id: 5, name: 'Bản ghi âm Phỏng vấn.mp3', type: 'audio', size: '3.2 MB', date: '2023-04-02', icon: 'fas fa-file-audio text-info' },
+                { id: 6, name: 'Mã nguồn.zip', type: 'other', size: '4.7 MB', date: '2023-03-28', icon: 'fas fa-file-archive text-secondary' }
+            ];
+
+            // Bộ lọc hiện tại
+            let activeFilter = 'all';
+            let activeView = 'grid';
+            let activeSort = 'newest';
+            let searchTerm = '';
+
+            // Khởi tạo các bộ lọc và sự kiện
+            function initFilters() {
+                // Thiết lập sự kiện cho các nút lọc
+                filterButtons.forEach(button => {
+                    button.addEventListener('click', function () {
+                        // Xóa lớp 'active' từ tất cả các nút
+                        filterButtons.forEach(btn => btn.classList.remove('active'));
+
+                        // Thêm lớp 'active' vào nút được nhấp
+                        this.classList.add('active');
+
+                        // Cập nhật bộ lọc hiện tại
+                        activeFilter = this.getAttribute('data-filter');
+
+                        // Hiển thị tệp với bộ lọc mới
+                        renderFiles();
+                    });
+                });
+
+                // Configurar evento para botões de visualização
+                viewButtons.forEach(button => {
+                    button.addEventListener('click', function () {
+                        // Remover classe 'active' de todos os botões
+                        viewButtons.forEach(btn => btn.classList.remove('active'));
+
+                        // Adicionar classe 'active' ao botão clicado
+                        this.classList.add('active');
+
+                        // Atualizar visualização ativa
+                        activeView = this.getAttribute('data-view');
+
+                        // Renderizar arquivos com a nova visualização
+                        renderFiles();
+                    });
+                });
+
+                // Thiết lập sự kiện cho tùy chọn sắp xếp
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', function () {
+                        activeSort = this.value;
+                        renderFiles();
+                    });
+                }
+
+                // Thiết lập sự kiện cho tìm kiếm
+                if (searchInput) {
+                    searchInput.addEventListener('input', function () {
+                        searchTerm = this.value.toLowerCase();
+                        renderFiles();
+                    });
+                }
+            }
+
+            // Renderizar lista de arquivos
+            function renderFiles() {
+                // Limpar o container
+                const filesList = document.createElement('div');
+                filesList.className = activeView === 'grid' ? 'files-grid' : 'files-list';
+
+                // Filtrar arquivos
+                const filteredFiles = mockFiles.filter(file => {
+                    // Filtrar por tipo
+                    const typeMatch = activeFilter === 'all' || file.type === activeFilter;
+
+                    // Filtrar por termo de busca
+                    const searchMatch = file.name.toLowerCase().includes(searchTerm);
+
+                    return typeMatch && searchMatch;
+                });
+
+                // Ordenar arquivos
+                const sortedFiles = [...filteredFiles].sort((a, b) => {
+                    switch (activeSort) {
+                        case 'newest':
+                            return new Date(b.date) - new Date(a.date);
+                        case 'oldest':
+                            return new Date(a.date) - new Date(b.date);
+                        case 'name-asc':
+                            return a.name.localeCompare(b.name);
+                        case 'name-desc':
+                            return b.name.localeCompare(a.name);
+                        case 'size-asc':
+                            return parseFloat(a.size) - parseFloat(b.size);
+                        case 'size-desc':
+                            return parseFloat(b.size) - parseFloat(a.size);
+                        default:
+                            return 0;
+                    }
+                });
+
+                // Mostrar estado vazio se não houver arquivos
+                if (sortedFiles.length === 0) {
+                    updateEmptyState(true);
+                    return;
+                }
+
+                // Ocultar estado vazio se houver arquivos
+                updateEmptyState(false);
+
+                // Renderizar cada arquivo
+                sortedFiles.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = activeView === 'grid' ? 'grid-item' : 'file-item';
+                    fileItem.setAttribute('data-id', file.id);
+
+                    // Estrutura HTML para visualização em grade
+                    if (activeView === 'grid') {
+                        fileItem.innerHTML = `
+                            <div class="grid-icon">
+                                <i class="${file.icon}"></i>
+                            </div>
+                            <div class="grid-name">${file.name}</div>
+                            <div class="grid-meta">
+                                <span>${file.size}</span> • <span>${formatDate(file.date)}</span>
+                            </div>
+                            <div class="grid-actions">
+                                <button class="btn-icon" title="Tải xuống"><i class="fas fa-download"></i></button>
+                                <button class="btn-icon" title="Chia sẻ"><i class="fas fa-share-alt"></i></button>
+                                <button class="btn-icon" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        `;
+                    } else {
+                        // Estrutura HTML para visualização em lista
+                        fileItem.innerHTML = `
+                            <div class="file-icon">
+                                <i class="${file.icon}"></i>
+                            </div>
+                            <div class="file-details">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-meta">
+                                    <span>${file.size}</span> • <span>${formatDate(file.date)}</span>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn-icon" title="Tải xuống"><i class="fas fa-download"></i></button>
+                                <button class="btn-icon" title="Chia sẻ"><i class="fas fa-share-alt"></i></button>
+                                <button class="btn-icon" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        `;
+                    }
+
+                    filesList.appendChild(fileItem);
+                });
+
+                // Ocultar loading e mostrar os arquivos
+                loadingFiles.style.display = 'none';
+
+                // Adicionar a lista ao container
+                filesContainer.innerHTML = '';
+                filesContainer.appendChild(filesList);
+
+                // Adicionar eventos de clique para visualização de arquivos
+                document.querySelectorAll('.grid-item, .file-item').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        // Não abrir preview se clicou em um botão de ação
+                        if (e.target.closest('.grid-actions') || e.target.closest('.file-actions')) {
+                            return;
+                        }
+
+                        // Pegar o ID do arquivo do elemento
+                        const fileId = parseInt(this.getAttribute('data-id'));
+                        const file = mockFiles.find(f => f.id === fileId);
+
+                        if (file) {
+                            openFilePreview(file);
+                        }
+                    });
+                });
+
+                // Adicionar eventos para botões de ação
+                document.querySelectorAll('.grid-actions .btn-icon, .file-actions .btn-icon').forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.stopPropagation(); // Impedir propagação do clique para o item
+
+                        const fileItem = this.closest('.grid-item') || this.closest('.file-item');
+                        const fileId = parseInt(fileItem.getAttribute('data-id'));
+                        const file = mockFiles.find(f => f.id === fileId);
+
+                        if (!file) return;
+
+                        // Identificar qual botão foi clicado
+                        if (this.title === 'Tải xuống') {
+                            downloadFile(file);
+                        } else if (this.title === 'Chia sẻ') {
+                            shareFile(file);
+                        } else if (this.title === 'Xóa') {
+                            deleteFile(file);
+                        }
+                    });
+                });
+            }
+
+            // Função para abrir o preview do arquivo
+            function openFilePreview(file) {
+                const modal = document.getElementById('file-preview-modal');
+                const previewContent = document.getElementById('file-preview-content');
+
+                // Preencher informações do arquivo
+                document.getElementById('preview-file-name').textContent = file.name;
+                document.getElementById('file-type').textContent = getFileTypeName(file.type);
+                document.getElementById('file-size').textContent = file.size;
+                document.getElementById('file-date').textContent = formatDate(file.date);
+
+                // Adicionar ID do arquivo aos botões para download/delete
+                document.getElementById('download-file').setAttribute('data-id', file.id);
+                document.getElementById('delete-file').setAttribute('data-id', file.id);
+
+                // Limpar conteúdo atual
+                previewContent.innerHTML = '';
+
+                // Renderizar preview baseado no tipo de arquivo
+                switch (file.type) {
+                    case 'image':
+                        // Simular preview de imagem (em produção, usaria a URL real)
+                        previewContent.innerHTML = `
+                            <div class="image-preview">
+                                <img src="assets/img/sample-image.jpg" alt="${file.name}" style="max-width: 100%;">
+                            </div>
+                        `;
+                        break;
+                    case 'video':
+                        previewContent.innerHTML = `
+                            <div class="video-preview">
+                                <video controls style="max-width: 100%;">
+                                    <source src="#" type="video/mp4">
+                                    Trình duyệt của bạn không hỗ trợ xem video.
+                                </video>
+                            </div>
+                            <div class="preview-placeholder">
+                                <i class="fas fa-video"></i>
+                                <p>Video preview đang được tải...</p>
+                            </div>
+                        `;
+                        break;
+                    case 'audio':
+                        previewContent.innerHTML = `
+                            <div class="audio-preview">
+                                <audio controls style="width: 100%;">
+                                    <source src="#" type="audio/mpeg">
+                                    Trình duyệt của bạn không hỗ trợ phát âm thanh.
+                                </audio>
+                            </div>
+                            <div class="preview-placeholder">
+                                <i class="fas fa-music"></i>
+                                <p>Audio preview đang được tải...</p>
+                            </div>
+                        `;
+                        break;
+                    case 'document':
+                        // Simular preview de documento
+                        previewContent.innerHTML = `
+                            <div class="document-preview">
+                                <div class="preview-placeholder">
+                                    <i class="${file.icon}"></i>
+                                    <p>Xem trước tài liệu</p>
+                                </div>
+                                <div class="sample-content">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae justo vel nisl facilisis gravida.</p>
+                                    <p>Nulla facilisi. Cras volutpat feugiat felis, vitae aliquam est hendrerit et.</p>
+                                    <p>Maecenas non varius nulla, eu elementum metus. Ut non aliquam est.</p>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    default:
+                        previewContent.innerHTML = `
+                            <div class="preview-placeholder">
+                                <i class="${file.icon}"></i>
+                                <p>Không thể xem trước định dạng này</p>
+                            </div>
+                        `;
+                }
+
+                // Exibir o modal
+                modal.style.display = 'flex';
+
+                // Adicionar eventos aos botões do modal
+                document.getElementById('download-file').onclick = function () {
+                    downloadFile(file);
+                };
+
+                document.getElementById('delete-file').onclick = function () {
+                    deleteFile(file);
+                    // Fechar o modal após confirmar a exclusão
+                    modal.style.display = 'none';
+                };
+
+                // Configurar botão de fechar
+                document.getElementById('close-preview-modal').onclick = function () {
+                    modal.style.display = 'none';
+                };
+
+                // Fechar ao clicar fora do conteúdo
+                modal.onclick = function (e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                };
+            }
+
+            // Função para baixar o arquivo
+            function downloadFile(file) {
+                // Simulação de download - em produção, usaria a URL real
+                alert(`Đang tải xuống: ${file.name}`);
+                console.log('Downloading file:', file);
+            }
+
+            // Função para compartilhar o arquivo
+            function shareFile(file) {
+                alert(`Chia sẻ: ${file.name}`);
+                console.log('Sharing file:', file);
+            }
+
+            // Função para excluir o arquivo
+            function deleteFile(file) {
+                if (confirm(`Bạn có chắc chắn muốn xóa "${file.name}"?`)) {
+                    console.log('Deleting file:', file);
+
+                    // Em produção, enviaria uma solicitação para o servidor para excluir o arquivo
+                    // Para a simulação, apenas atualizamos os arquivos mockados
+                    const index = mockFiles.findIndex(f => f.id === file.id);
+                    if (index !== -1) {
+                        mockFiles.splice(index, 1);
+                        renderFiles(); // Atualizar a lista de arquivos
+                    }
+
+                    // Mostrar mensagem de sucesso
+                    alert(`Đã xóa: ${file.name}`);
+                }
+            }
+
+            // Função para obter nome do tipo de arquivo
+            function getFileTypeName(type) {
+                switch (type) {
+                    case 'document': return 'Tài liệu';
+                    case 'image': return 'Hình ảnh';
+                    case 'video': return 'Video';
+                    case 'audio': return 'Âm thanh';
+                    case 'other': return 'Khác';
+                    default: return type;
+                }
+            }
+
+            // Atualizar estado vazio
+            function updateEmptyState(isEmpty) {
+                if (isEmpty) {
+                    emptyFiles.style.display = 'flex';
+
+                    // Mensagem personalizada baseada no filtro ativo
+                    if (searchTerm) {
+                        emptyFiles.querySelector('h3').textContent = "Không tìm thấy kết quả";
+                        emptyFiles.querySelector('p').textContent = "Vui lòng thử các từ khóa khác";
+                    } else if (activeFilter !== 'all') {
+                        emptyFiles.querySelector('h3').textContent = `Không có tệp ${getFilterName(activeFilter)}`;
+                        emptyFiles.querySelector('p').textContent = "Hãy tải lên một tệp tin loại này";
+                    } else {
+                        emptyFiles.querySelector('h3').textContent = "Chưa có tệp tin nào";
+                        emptyFiles.querySelector('p').textContent = "Hãy tải lên tệp tin đầu tiên của bạn";
+                    }
+                } else {
+                    emptyFiles.style.display = 'none';
+                }
+            }
+
+            // Obter nome do filtro
+            function getFilterName(filter) {
+                switch (filter) {
+                    case 'document': return 'văn bản';
+                    case 'image': return 'hình ảnh';
+                    case 'video': return 'video';
+                    case 'audio': return 'âm thanh';
+                    case 'other': return 'khác';
+                    default: return '';
+                }
+            }
+
+            // Formatar data para exibição
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('vi-VN');
+            }
+
+            // Bắt đầu
+            initFilters();
+            setTimeout(() => {
+                renderFiles();
+            }, 1000); // Mô phỏng thời gian tải
+
+            // Cập nhật thông tin lưu trữ
+            document.getElementById('used-storage').textContent = '143 MB';
+            document.getElementById('total-storage').textContent = '2 GB';
+            document.getElementById('storage-progress-bar').style.width = '7%';
+        });
+    </script>
+</body>
+
+</html>

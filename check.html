@@ -25,6 +25,7 @@
                         <li><a href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
                         <li><a href="check.html" class="active"><i class="fas fa-search"></i> Kiểm tra</a></li>
                         <li><a href="history.html"><i class="fas fa-history"></i> Lịch sử</a></li>
+                        <li><a href="storage.html"><i class="fas fa-hdd"></i> Lưu trữ</a></li>
                         <li><a href="subscription.html"><i class="fas fa-crown"></i> Gói dịch vụ</a></li>
                         <li class="guest-only"><a href="#" id="login-link" class="btn btn-outline"><i
                                     class="fas fa-sign-in-alt"></i> Đăng nhập</a></li>
@@ -92,7 +93,55 @@
                     </label>
                     <input type="file" id="video-input" style="display: none;" accept="video/*">
                 </div>
-                <button id="check-btn" class="btn btn-primary"><i class="fas fa-search"></i> Kiểm tra ngay</button>
+
+                <div class="section-actions">
+                    <div class="filter-dropdown">
+                        <button class="btn btn-outline dropdown-toggle">
+                            <i class="fas fa-filter"></i> Lọc
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="filter-accurate" checked>
+                                    <label for="filter-accurate">Độ chính xác cao</label>
+                                </div>
+                            </div>
+                            <div class="dropdown-item">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="filter-web" checked>
+                                    <label for="filter-web">Nguồn web</label>
+                                </div>
+                            </div>
+                            <div class="dropdown-item">
+                                <div class="checkbox">
+                                    <input type="checkbox" id="filter-academic" checked>
+                                    <label for="filter-academic">Nguồn học thuật</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sort-dropdown">
+                        <button class="btn btn-outline dropdown-toggle">
+                            <i class="fas fa-sort"></i> Sắp xếp
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item active" data-sort="relevant"><i class="fas fa-check"></i>
+                                Liên quan nhất</a>
+                            <a href="#" class="dropdown-item" data-sort="recent"><i class="fas fa-clock"></i> Gần đây
+                                nhất</a>
+                            <a href="#" class="dropdown-item" data-sort="match-high"><i class="fas fa-arrow-up"></i> Tỷ
+                                lệ cao nhất</a>
+                            <a href="#" class="dropdown-item" data-sort="match-low"><i class="fas fa-arrow-down"></i> Tỷ
+                                lệ thấp nhất</a>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="check-btn" class="btn btn-primary"><i class="fas fa-search" style="font-size: 14px;"></i>
+                    Kiểm tra ngay</button>
                 <p class="advanced-options-toggle"><a href="#" id="show-advanced"><i class="fas fa-cog"></i> Tùy chọn
                         nâng cao</a></p>
                 <div class="advanced-options" style="display: none;">
@@ -319,10 +368,10 @@
     <script src="assets/js/utils/performance.js"></script>
     <script src="assets/js/utils/email.js"></script>
     <script src="assets/js/config.js"></script>
-    <script src="assets/js/api/mongodb.js"></script>
-    <script src="assets/js/api/plagiarism.js"></script>
     <script src="assets/js/model/userModel.js"></script>
     <script src="assets/js/model/fileModel.js"></script>
+    <script src="assets/js/api/mongodb.js"></script>
+    <script src="assets/js/api/plagiarism.js"></script>
     <script src="assets/js/view/authView.js"></script>
     <script src="assets/js/view/mainView.js"></script>
     <script src="assets/js/view/adminView.js"></script>
@@ -334,6 +383,16 @@
         // Đảm bảo DOM đã được tải hoàn toàn
         document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM fully loaded');
+
+            // Verificar disponibilidade das classes principais
+            console.log('MainController available:', typeof MainController !== 'undefined');
+            console.log('MainView available:', typeof MainView !== 'undefined');
+            console.log('FileModel available:', typeof FileModel !== 'undefined');
+            console.log('PlagiarismAPI available:', typeof PlagiarismAPI !== 'undefined');
+            console.log('UserModel available:', typeof UserModel !== 'undefined');
+            console.log('window.mainView:', !!window.mainView);
+            console.log('window.userModel:', !!window.userModel);
+            console.log('window.mainController:', !!window.mainController);
 
             // Initialize models
             if (typeof UserModel !== 'undefined' && !window.userModel) {
@@ -479,29 +538,28 @@
                     if (!window.mainController) {
                         console.log("MainController not initialized. Initializing now...");
 
-                        // Kiểm tra xem MainView, MainController và userModel đã được định nghĩa chưa
-                        if (window.MainController && window.MainView && window.userModel) {
+                        try {
                             // Khởi tạo các components cần thiết
                             if (!window.mainView) {
                                 window.mainView = new MainView();
+                                console.log("MainView initialized in check.html");
                             }
 
-                            const fileModel = new FileModel();
+                            if (!window.fileModel) {
+                                window.fileModel = new FileModel();
+                                console.log("FileModel initialized in check.html");
+                            }
+
+                            // Tạo đối tượng PlagiarismAPI mới
                             const plagiarismAPI = new PlagiarismAPI();
+                            console.log("PlagiarismAPI created in check.html");
 
-                            // Khởi tạo MainController
-                            window.mainController = new MainController(fileModel, window.mainView, plagiarismAPI, window.userModel);
-                            console.log("MainController initialized on demand");
-                        } else {
-                            console.error("Required components not available for initializing MainController");
-                            if (window.MainView && !window.mainView) {
-                                window.mainView = new MainView();
-                            }
-                            if (window.mainView) {
-                                window.mainView.showNotification('Lỗi khởi tạo hệ thống. Vui lòng tải lại trang.', 'error');
-                            } else {
-                                alert('Lỗi khởi tạo hệ thống. Vui lòng tải lại trang.');
-                            }
+                            // Khởi tạo MainController với thứ tự tham số đúng
+                            window.mainController = new MainController(window.fileModel, window.mainView, plagiarismAPI, window.userModel);
+                            console.log("MainController initialized on demand in check.html");
+                        } catch (err) {
+                            console.error("Error initializing controller:", err);
+                            alert('Lỗi khởi tạo controller: ' + err.message);
                             return;
                         }
                     }
