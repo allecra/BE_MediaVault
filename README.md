@@ -1,3 +1,4 @@
+WEB LƯU TRỮ MULTIMEDIA, CHECK ĐẠO VĂN
 - Ứng dụng phần mềm cần được phát triển với các yêu cầu sau: 
 
 - Xây dựng trên kiến trúc microservices, cho phép phát triển và triển khai độc lập các thành phần chức năng của hệ thống. 
